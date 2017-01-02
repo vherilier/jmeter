@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -330,7 +331,7 @@ public final class JOrphanUtils {
      * @return slice from the input array
      */
     public static byte[] getByteArraySlice(byte[] array, int begin, int end) {
-        byte[] slice = new byte[(end - begin + 1)];
+        byte[] slice = new byte[end - begin + 1];
         System.arraycopy(array, begin, slice, 0, slice.length);
         return slice;
     }
@@ -493,7 +494,7 @@ public final class JOrphanUtils {
     public static int read(InputStream is, byte[] buffer, int offset, int length) throws IOException {
         int remaining = length;
         while ( remaining > 0 ) {
-            int location = ( length - remaining );
+            int location = length - remaining;
             int count = is.read( buffer, location, remaining );
             if ( -1 == count ) { // EOF
                 break;
@@ -524,7 +525,7 @@ public final class JOrphanUtils {
                     builder.append(stackTraceElement.getClassName()+"#"+stackTraceElement.getMethodName()+
                             (lineNumber >=0 ? " at line:"+ stackTraceElement.getLineNumber() : "")+lineSeparator);
                 }
-                System.out.println(e.getKey().toString()+((daemon ? " (daemon)" : ""))+", stackTrace:"+ builder.toString());
+                System.out.println(e.getKey().toString()+(daemon ? " (daemon)" : "")+", stackTrace:"+ builder.toString());
             }
         }
     }
@@ -615,5 +616,40 @@ public final class JOrphanUtils {
                         +folder.getAbsolutePath()+"' as folder does not exist and parent folder is not writable");
             }
         }
+    }
+
+    /**
+     * Replace in source all matches of regex by replacement taking 
+     * into account case if caseSensitive is true
+     * @param source Source text
+     * @param regex Regular expression
+     * @param replacement Replacement text to which function applies a quoting
+     * @param caseSensitive is case taken into account
+     * @return array of Object where first row is the replaced text, second row is the number of replacement that occured
+     */
+    public static Object[] replaceAllWithRegex(
+            String source, String regex, String replacement, boolean caseSensitive) {
+        java.util.regex.Pattern pattern = caseSensitive ? 
+                java.util.regex.Pattern.compile(regex) :  
+                java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE);
+        String newText = source;
+        final String replacementQuoted = Matcher.quoteReplacement(replacement);
+        Matcher matcher = pattern.matcher(newText);
+        int totalReplaced = 0;
+        while(true) {
+            String previousText = newText;
+            newText = matcher.replaceFirst(replacementQuoted);
+            matcher = pattern.matcher(newText);
+            if(newText.equals(previousText)) {
+                break;
+            } else {
+                totalReplaced++;
+            }
+        }
+
+        return new Object[]{
+                newText,
+                totalReplaced
+        };
     }
 }

@@ -83,6 +83,9 @@ Fill in some detail.
 
 <ul>
     <li>JMeter requires now at least a JAVA 8 version to run.</li>
+    <li>Process Sampler now returns error code 500 when an error occurs. It previously returned an empty value.</li>
+    <li>In <code>org.apache.jmeter.protocol.http.sampler.HTTPHCAbstractImpl</code> 2 protected static fields (localhost and nonProxyHostSuffixSize) have been renamed to (LOCALHOST and NON_PROXY_HOST_SUFFIX_SIZE) 
+        to follow static fields naming convention</li>
 </ul>
 
 <h3>Deprecated and removed elements or functions</h3>
@@ -95,6 +98,7 @@ Fill in some detail.
     <li>Drop deprecated class <code>org.apache.jmeter.reporters.FileReporter</code></li>
     <li>Drop deprecated class <code>org.apache.jmeter.protocol.http.modifier.UserSequence</code></li>
     <li>Drop deprecated class <code>org.apache.jmeter.protocol.http.parser.HTMLParseError</code></li>
+    <li><code>org.apache.jmeter.protocol.http.util.Base64Encode</code> has been deprecated, you can use <code>java.util.Base64</code> as a replacement</li>
 </ul>
 
 <!-- =================== Improvements =================== -->
@@ -121,6 +125,8 @@ Fill in some detail.
 
 <h3>Timers, Assertions, Config, Pre- &amp; Post-Processors</h3>
 <ul>
+    <li><bug>60154</bug>User Parameters GUI: allow rows to be moved up &amp; down in the list. Contributed by Murdecai777 (https://github.com/Murdecai777).</li>
+    <li><bug>60507</bug>Added '<code>Or</code>' Function into ResponseAssertion. Based on a contribution from 忻隆 (298015902 at qq.com)</li>
 </ul>
 
 <h3>Functions</h3>
@@ -137,11 +143,13 @@ Fill in some detail.
 
 <h3>General</h3>
 <ul>
-  <li><bug>60415</bug>Drop support for Java 7.</li>
+    <li><bug>54525</bug>Search Feature : Enhance it with ability to replace</li>
+    <li><bug>60530</bug>Add API to create JMeter threads while test is running. Based on a contribution by Logan Mauzaize and Maxime Chassagneux</li>
 </ul>
 
 <ch_section>Non-functional changes</ch_section>
 <ul>
+    <li><bug>60415</bug>Drop support for Java 7.</li>
     <li>Updated to xxx-1.1 (from 0.2)</li>
 </ul>
 
@@ -151,7 +159,8 @@ Fill in some detail.
 
 <h3>HTTP Samplers and Test Script Recorder</h3>
 <ul>
- </ul>
+    <li><bug>60531</bug>HTTP Cookie Manager : changing Implementation does not update Cookie Policy</li>
+</ul>
 
 <h3>Other Samplers</h3>
 <ul>
@@ -188,6 +197,8 @@ Fill in some detail.
     <li><bug>60442</bug>Fix a typo in <code>build.xml</code> (gavin at 16degrees.com.au)</li>
     <li><bug>60449</bug>JMeter Tree : Annoying behaviour when node name is empty</li>
     <li><bug>60494</bug>Add sonar analysis task to build</li>
+    <li><bug>60501</bug>Search Feature : Performance issue when regexp is checked</li>
+    <li><bug>60444</bug>Intermittent failure of TestHTTPMirrorThread#testSleep(). Contributed by Thomas Schapitz (ts-nospam12 at online.de)</li>
 </ul>
 
  <!--  =================== Thanks =================== -->
@@ -200,6 +211,11 @@ Fill in some detail.
 <li>Liu XP (liu_xp2003 at sina.com)</li>
 <li>Qi Chen (qi.chensh at ele.me)</li>
 <li>(gavin at 16degrees.com.au)</li>
+<li>Thomas Schapitz (ts-nospam12 at online.de)</li>
+<li>Murdecai777 (https://github.com/Murdecai777)</li>
+<li>Logan Mauzaize (https://github.com/loganmzz)</li>
+<li>Maxime Chassagneux (https://github.com/max3163)</li>
+<li>忻隆 (298015902 at qq.com)</li>
 </ul>
 <p>We also thank bug reporters who helped us improve JMeter. <br/>
 For this release we want to give special thanks to the following reporters for the clear reports and tests made after our fixes:</p>

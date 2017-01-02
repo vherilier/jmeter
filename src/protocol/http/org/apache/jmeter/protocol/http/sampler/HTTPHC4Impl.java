@@ -179,21 +179,13 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
      * would throw org.apache.http.impl.conn.ConnectionShutdownException
      * See <a href="https://bz.apache.org/jira/browse/HTTPCLIENT-1081">HTTPCLIENT-1081</a>
      */
-    private static final HttpResponseInterceptor METRICS_SAVER = new HttpResponseInterceptor(){
-        @Override
-        public void process(HttpResponse response, HttpContext context)
-                throws HttpException, IOException {
-            HttpConnectionMetrics metrics = ((HttpConnection) context.getAttribute(HttpCoreContext.HTTP_CONNECTION)).getMetrics();
-            context.setAttribute(CONTEXT_METRICS, metrics);
-        }
+    private static final HttpResponseInterceptor METRICS_SAVER = (HttpResponse response, HttpContext context) -> {
+        HttpConnectionMetrics metrics = ((HttpConnection) context.getAttribute(HttpCoreContext.HTTP_CONNECTION)).getMetrics();
+        context.setAttribute(CONTEXT_METRICS, metrics);
     };
-    private static final HttpRequestInterceptor METRICS_RESETTER = new HttpRequestInterceptor() {
-        @Override
-        public void process(HttpRequest request, HttpContext context)
-                throws HttpException, IOException {
-            HttpConnectionMetrics metrics = ((HttpConnection) context.getAttribute(HttpCoreContext.HTTP_CONNECTION)).getMetrics();
-            metrics.reset();
-        }
+    private static final HttpRequestInterceptor METRICS_RESETTER = (HttpRequest request, HttpContext context) -> {
+        HttpConnectionMetrics metrics = ((HttpConnection) context.getAttribute(HttpCoreContext.HTTP_CONNECTION)).getMetrics();
+        metrics.reset();
     };
 
 
@@ -398,10 +390,8 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
         res.sampleStart();
 
         final CacheManager cacheManager = getCacheManager();
-        if (cacheManager != null && HTTPConstants.GET.equalsIgnoreCase(method)) {
-           if (cacheManager.inCache(url)) {
-               return updateSampleResultForResourceInCache(res);
-           }
+        if (cacheManager != null && HTTPConstants.GET.equalsIgnoreCase(method) && cacheManager.inCache(url)) {
+            return updateSampleResultForResourceInCache(res);
         }
 
         try {
@@ -457,10 +447,10 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             // record some sizes to allow HTTPSampleResult.getBytes() with different options
             HttpConnectionMetrics  metrics = (HttpConnectionMetrics) localContext.getAttribute(CONTEXT_METRICS);
             long headerBytes = 
-                res.getResponseHeaders().length()   // condensed length (without \r)
-              + httpResponse.getAllHeaders().length // Add \r for each header
-              + 1 // Add \r for initial header
-              + 2; // final \r\n before data
+                (long)res.getResponseHeaders().length()   // condensed length (without \r)
+              + (long) httpResponse.getAllHeaders().length // Add \r for each header
+              + 1L // Add \r for initial header
+              + 2L; // final \r\n before data
             long totalBytes = metrics.getReceivedBytesCount();
             res.setHeadersSize((int)headerBytes);
             res.setBodySize(totalBytes - headerBytes);
@@ -858,7 +848,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
                 if (proxyUser.length() > 0) {                   
                     ((AbstractHttpClient) httpClient).getCredentialsProvider().setCredentials(
                             new AuthScope(proxyHost, proxyPort),
-                            new NTCredentials(proxyUser, proxyPass, localHost, PROXY_DOMAIN));
+                            new NTCredentials(proxyUser, proxyPass, LOCALHOST, PROXY_DOMAIN));
                 }
             }
 
@@ -1006,7 +996,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     private void writeResponseHeader(StringBuilder headerBuffer, Header responseHeader) {
         if(responseHeader instanceof BufferedHeader) {
             CharArrayBuffer buffer = ((BufferedHeader)responseHeader).getBuffer();
-            headerBuffer.append(buffer.buffer(), 0, buffer.length()).append('\n'); // $NON-NLS-1$;
+            headerBuffer.append(buffer.buffer(), 0, buffer.length()).append('\n'); // $NON-NLS-1$
         }
         else {
             headerBuffer.append(responseHeader.getName())
@@ -1142,7 +1132,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             ((AbstractHttpClient) client).getCredentialsProvider();
         if (authManager != null) {
             if(authManager.hasAuthForURL(url)) {
-                authManager.setupCredentials(client, url, credentialsProvider, localHost);
+                authManager.setupCredentials(client, url, credentialsProvider, LOCALHOST);
             } else {
                 credentialsProvider.clear();
             }

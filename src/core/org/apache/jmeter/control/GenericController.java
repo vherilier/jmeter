@@ -167,7 +167,6 @@ public class GenericController extends AbstractTestElement implements Controller
             TestElement currentElement = getCurrentElement();
             setCurrentElement(currentElement);
             if (currentElement == null) {
-                // incrementCurrent();
                 returnValue = nextIsNull();
             } else {
                 if (currentElement instanceof Sampler) {
@@ -260,15 +259,6 @@ public class GenericController extends AbstractTestElement implements Controller
     @Override
     public void triggerEndOfLoop() {
         reInitialize();
-    }
-
-    /**
-     * Called to re-initialize a index of controller's elements (Bug 50032)
-     * @deprecated replaced by GeneriController#initializeSubControllers
-     */
-    @Deprecated
-    protected void reInitializeSubController() {
-        initializeSubControllers();
     }
     
     /**

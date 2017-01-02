@@ -124,9 +124,17 @@ public final class MenuFactory {
     private static final String[] MENU_PARENT_SAMPLER = new String[] {
         MenuFactory.CONTROLLERS };
 
-    private static final List<MenuInfo> timers, controllers, samplers, threads, 
-        fragments,configElements, assertions, listeners, nonTestElements,
-        postProcessors, preProcessors;
+    private static final List<MenuInfo> timers;
+    private static final List<MenuInfo> controllers;
+    private static final List<MenuInfo> samplers;
+    private static final List<MenuInfo> threads;
+    private static final List<MenuInfo> fragments;
+    private static final List<MenuInfo> configElements;
+    private static final List<MenuInfo> assertions;
+    private static final List<MenuInfo> listeners;
+    private static final List<MenuInfo> nonTestElements;
+    private static final List<MenuInfo> postProcessors;
+    private static final List<MenuInfo> preProcessors;
 
     static {
         threads = new LinkedList<>();
@@ -160,14 +168,11 @@ public final class MenuFactory {
 
             initializeMenus();
             sortPluginMenus();
-        } catch (Throwable e) {
-            log.error("", e);
-            if (e instanceof Error){
-                throw (Error) e;
-            }
-            if (e instanceof RuntimeException){
-                throw (RuntimeException) e;
-            }
+        } catch (Error | RuntimeException ex) { // NOSONAR We want to log Errors in jmeter.log 
+            log.error("Error initializing menus in static bloc, check configuration if using 3rd party libraries", ex);
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Error initializing menus in static bloc, check configuration if using 3rd party libraries", ex);
         }
     }
 
@@ -498,7 +503,7 @@ public final class MenuFactory {
 
                 boolean hideBean = false; // Should the TestBean be hidden?
 
-                JMeterGUIComponent item;
+                JMeterGUIComponent item = null;
                 try {
                     Class<?> c = Class.forName(name);
                     if (TestBean.class.isAssignableFrom(c)) {
@@ -509,18 +514,16 @@ public final class MenuFactory {
                         item = (JMeterGUIComponent) c.newInstance();
                     }
                 } catch (NoClassDefFoundError e) {
-                    log.warn("Missing jar? Could not create " + name + ". " + e);
+                    log.warn("Configuration error, probably corrupt or missing third party library(jar) ? Could not create class:" + name + ". " + e, 
+                            e);
                     continue;
-                } catch (Throwable e) {
-                    log.warn("Could not instantiate " + name, e);
-                    if (e instanceof Error){
-                        throw (Error) e;
-                    }
-                    if (e instanceof RuntimeException){
-                        if (!(e instanceof HeadlessException)) { // Allow headless testing
-                            throw (RuntimeException) e;
-                        }
-                    }
+                } catch(HeadlessException e) {
+                    log.warn("Could not instantiate class:" + name, e); // NOSONAR
+                    continue;
+                } catch(RuntimeException e) {
+                    throw (RuntimeException) e;
+                } catch (Exception e) {
+                    log.warn("Could not instantiate class:" + name, e); // NOSONAR
                     continue;
                 }
                 if (hideBean || elementsToSkip.contains(item.getStaticLabel())) {

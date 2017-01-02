@@ -16,26 +16,27 @@
  *
  */
 
-package org.apache.jmeter.functions.util;
-
-import org.apache.oro.text.perl.Perl5Util;
+package org.apache.jmeter.gui;
 
 /**
- * Encode an Argument
+ * Interface for nodes that have replaceable content.
+ * <p>
+ * A {@link Replaceable} component will get asked for tokens, that should be used
+ * in a search. These tokens will then be matched against a user given search
+ * string.
+ * @since 3.2
  */
-public final class ArgumentEncoder {
-    private static final Perl5Util util = new Perl5Util();
-
-    private static final String REGULAR_EXPRESSION = "s#([${}(),\\\\])#\\$1#g";
-
-    // TODO does not appear to be used
-    public static String encode(String s) {
-        return util.substitute(REGULAR_EXPRESSION, s);
-    }
-
+public interface Replaceable {
     /**
-     * Prevent instantiation of utility class.
+     * Replace in object  by replaceBy
+     *
+     * @param regex Regular expression to search for
+     * @param replaceBy Text used as replacement
+     * @param caseSensitive flag, whether search should be done case sensitive
+     * @return number of replacements
+     * @throws Exception
+     *             when something fails while replacing
      */
-    private ArgumentEncoder() {
-    }
+    int replace(String regex, String replaceBy, boolean caseSensitive)
+        throws Exception;
 }

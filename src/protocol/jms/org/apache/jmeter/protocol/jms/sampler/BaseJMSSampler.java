@@ -28,6 +28,8 @@ import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
 
 /**
  *
@@ -37,6 +39,8 @@ import org.apache.jmeter.util.JMeterUtils;
 public abstract class BaseJMSSampler extends AbstractSampler {
 
     private static final long serialVersionUID = 240L;
+    
+    private static final Logger LOGGER = LoggingManager.getLoggerForClass(); 
 
     //++ These are JMX file attribute names and must not be changed
     private static final String JNDI_INITIAL_CONTEXT_FAC = "jms.initial_context_factory"; // $NON-NLS-1$
@@ -343,8 +347,8 @@ public abstract class BaseJMSSampler extends AbstractSampler {
             final Destination destination = message.getJMSDestination();
 
             response.append("\n   Destination: ");
-            response.append((destination == null ? null : destination
-                .toString()));
+            response.append(destination == null ? null : destination
+                .toString());
 
             response.append("\n   Expiration: ");
             response.append(new Date(message.getJMSExpiration()));
@@ -360,7 +364,7 @@ public abstract class BaseJMSSampler extends AbstractSampler {
 
             final Destination replyTo = message.getJMSReplyTo();
             response.append("\n   Reply to: ");
-            response.append((replyTo == null ? null : replyTo.toString()));
+            response.append(replyTo == null ? null : replyTo.toString());
 
             response.append("\n   Timestamp: ");
             response.append(new Date(message.getJMSTimestamp()));
@@ -371,9 +375,10 @@ public abstract class BaseJMSSampler extends AbstractSampler {
             response.append("\n\n");
 
         } catch (JMSException e) {
-            e.printStackTrace();
+            LOGGER.warn(
+                    "Can't extract message headers", e);
         }
 
-        return new String(response);
+        return response.toString();
     }
 }
