@@ -1729,6 +1729,18 @@ log_level.org.apache.http.client=DEBUG
     Indicates whether only controller samples are displayed on graphs that support it.<br/>
     Defaults to: <code>false</code>
 </property>
+<property name="jmeter.reportgenerator.date_format">
+    Date format of report using by start_date and end_date properties.<br/>
+    Defaults to: <code>yyyyMMddHHmmss</code>
+</property>
+<property name="jmeter.reportgenerator.start_date">
+    Start date of report using date_format property.<br/>
+    Defaults to: nothing
+</property>
+<property name="jmeter.reportgenerator.end_date">
+    End date of report using date_format property.<br/>
+    Defaults to: nothing
+</property>
 </properties>
 </section>
 <section name="&sect-num;.41 Additional property files to load" anchor="properties">
@@ -1791,9 +1803,48 @@ log_level.org.apache.http.client=DEBUG
     </ul>
     Defaults to: <code>1.0f</code>
 </property>
+<property name="think_time_creator.impl">
+    Default implementation that create the Timer structure to add to Test Plan. 
+    Implementation of interface <a href="../api/org/apache/jmeter/gui/action/thinktime/ThinkTimeCreator.html"><code>org.apache.jmeter.gui.action.thinktime.ThinkTimeCreator</code></a>
+    Defaults to: <a href="../api/org/apache/jmeter/thinktime/DefaultThinkTimeCreator.html"><code>org.apache.jmeter.thinktime.DefaultThinkTimeCreator</code></a>
+</property>
+<property name="think_time_creator.default_timer_implementation">
+    Default Timer GUI class added to Test Plan by DefaultThinkTimeCreator
+    Defaults to: <a href="../api/org/apache/jmeter/timers/gui/UniformRandomTimerGui.html"><code>org.apache.jmeter.timers.gui.UniformRandomTimerGui</code></a>
+</property>
+<property name="think_time_creator.default_constant_pause">
+    Default constant pause of Timer
+    Defaults to: <code>1000</code>
+</property>
+<property name="think_time_creator.default_range">
+    Default range pause of Timer
+    Defaults to: <code>100</code>
+</property>
 </properties>
 <a href="#">^</a>
 </section>
+
+<section name="&sect-num;.44 Naming Policy" anchor="naming_policy">
+<description>Timer are used to introduce think time in your plan.</description>
+<properties>
+<property name="naming_policy.prefix">
+    Prefix used when naming elements.
+    Defaults to empty prefix
+</property>
+<property name="naming_policy.suffix">
+    Prefix used when naming elements.
+    Defaults to empty suffix
+</property>
+<property name="naming_policy.impl">
+    Implementation of interface <a href="../api/org/apache/jmeter/gui/action/TreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.TreeNodeNamingPolicy</code></a>
+    Default implementation that create the Timer structure to add to Test Plan. 
+    Implementation of interface org.apache.jmeter.gui.action.thinktime.ThinkTimeCreator
+    Defaults to: <a href="../api/org/apache/jmeter/gui/action/impl/DefaultTreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.impl.DefaultTreeNodeNamingPolicy</code></a>
+</property>
+</properties>
+<a href="#">^</a>
+</section>
+
 <!-- 
 <section name="&sect-num;.10 Reports" anchor="Reports">
 <description>
