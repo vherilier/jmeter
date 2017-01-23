@@ -16,15 +16,18 @@
  *
  */
 
-package org.apache.jmeter.protocol.http.control.gui;
+package org.apache.jmeter.protocol.http.config.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ItemEvent;
+<<<<<<< HEAD
 import java.awt.event.ItemListener;
 import java.util.Arrays;
 import java.util.Collection;
+=======
+>>>>>>> trunk
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -32,37 +35,38 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.jmeter.config.ConfigTestElement;
+import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.util.HorizontalPanel;
 import org.apache.jmeter.gui.util.VerticalPanel;
-import org.apache.jmeter.protocol.http.config.gui.UrlConfigGui;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerFactory;
-import org.apache.jmeter.protocol.http.sampler.HTTPSamplerProxy;
-import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
+import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.property.BooleanProperty;
+import org.apache.jmeter.testelement.property.IntegerProperty;
+import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.gui.JLabeledChoice;
 import org.apache.jorphan.gui.JLabeledTextField;
 
-//For unit tests, @see TestHttpTestSampleGui
-
 /**
- * HTTP Sampler GUI
+ * GUI for Http Request defaults
  *
  */
-public class HttpTestSampleGui extends AbstractSamplerGui {
-    
+public class HttpDefaultsGui extends AbstractConfigGui {
+
     private static final long serialVersionUID = 241L;
-    
+
     private static final Font FONT_DEFAULT = UIManager.getDefaults().getFont("TextField.font");
     
     private static final Font FONT_SMALL = new Font("SansSerif", Font.PLAIN, (int) Math.round(FONT_DEFAULT.getSize() * 0.8));
-    
+
     private UrlConfigGui urlConfigGui;
 
     private JCheckBox retrieveEmbeddedResources;
@@ -79,8 +83,6 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
     
     private JComboBox<String> sourceIpType = new JComboBox<>(HTTPSamplerBase.getSourceTypeList());
 
-    private final boolean isAJP;
-    
     private JTextField proxyHost;
 
     private JTextField proxyPort;
@@ -95,89 +97,15 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
 
     private JTextField responseTimeOut;
 
-    public HttpTestSampleGui() {
-        isAJP = false;
+
+    public HttpDefaultsGui() {
+        super();
         init();
     }
 
-    // For use by AJP
-    protected HttpTestSampleGui(boolean ajp) {
-        isAJP = ajp;
-        init();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void configure(TestElement element) {
-        super.configure(element);
-        final HTTPSamplerBase samplerBase = (HTTPSamplerBase) element;
-        urlConfigGui.configure(element);
-        retrieveEmbeddedResources.setSelected(samplerBase.isImageParser());
-        concurrentDwn.setSelected(samplerBase.isConcurrentDwn());
-        concurrentPool.setText(samplerBase.getConcurrentPool());
-        useMD5.setSelected(samplerBase.useMD5());
-        embeddedRE.setText(samplerBase.getEmbeddedUrlRE());
-        if (!isAJP) {
-            sourceIpAddr.setText(samplerBase.getIpSource());
-            sourceIpType.setSelectedIndex(samplerBase.getIpSourceType());
-            proxyHost.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYHOST));
-            proxyPort.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYPORT));
-            proxyUser.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYUSER));
-            proxyPass.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYPASS));
-            httpImplementation.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.IMPLEMENTATION));
-            connectTimeOut.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.CONNECT_TIMEOUT));
-            responseTimeOut.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.RESPONSE_TIMEOUT));
-        }
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TestElement createTestElement() {
-        HTTPSamplerBase sampler = new HTTPSamplerProxy();
-        modifyTestElement(sampler);
-        return sampler;
-    }
-
-    /**
-     * Modifies a given TestElement to mirror the data in the gui components.
-     * <p>
-     * {@inheritDoc}
-     */
-    @Override
-    public void modifyTestElement(TestElement sampler) {
-        sampler.clear();
-        urlConfigGui.modifyTestElement(sampler);
-        final HTTPSamplerBase samplerBase = (HTTPSamplerBase) sampler;
-        samplerBase.setImageParser(retrieveEmbeddedResources.isSelected());
-        enableConcurrentDwn(retrieveEmbeddedResources.isSelected());
-        samplerBase.setConcurrentDwn(concurrentDwn.isSelected());
-        samplerBase.setConcurrentPool(concurrentPool.getText());
-        samplerBase.setMD5(useMD5.isSelected());
-        samplerBase.setEmbeddedUrlRE(embeddedRE.getText());
-        if (!isAJP) {
-            samplerBase.setIpSource(sourceIpAddr.getText());
-            samplerBase.setIpSourceType(sourceIpType.getSelectedIndex());
-            samplerBase.setProperty(HTTPSamplerBase.PROXYHOST, proxyHost.getText(),"");
-            samplerBase.setProperty(HTTPSamplerBase.PROXYPORT, proxyPort.getText(),"");
-            samplerBase.setProperty(HTTPSamplerBase.PROXYUSER, proxyUser.getText(),"");
-            samplerBase.setProperty(HTTPSamplerBase.PROXYPASS, String.valueOf(proxyPass.getPassword()),"");
-            samplerBase.setProperty(HTTPSamplerBase.IMPLEMENTATION, httpImplementation.getText(),"");
-            samplerBase.setProperty(HTTPSamplerBase.CONNECT_TIMEOUT, connectTimeOut.getText());
-            samplerBase.setProperty(HTTPSamplerBase.RESPONSE_TIMEOUT, responseTimeOut.getText());
-        }
-        super.configureTestElement(sampler);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getLabelResource() {
-        return "web_testing_title"; // $NON-NLS-1$
+        return "url_config_title"; // $NON-NLS-1$
     }
     
     @Override
@@ -185,36 +113,158 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
         return Arrays.asList(JMeterUtils.getResString("http_protocol")); // $NON-NLS-1$
     }
 
-    private void init() {// called from ctor, so must not be overridable
+    /**
+     * @see org.apache.jmeter.gui.JMeterGUIComponent#createTestElement()
+     */
+    @Override
+    public TestElement createTestElement() {
+        ConfigTestElement config = new ConfigTestElement();
+        modifyTestElement(config);
+        return config;
+    }
+
+    /**
+     * Modifies a given TestElement to mirror the data in the gui components.
+     *
+     * @see org.apache.jmeter.gui.JMeterGUIComponent#modifyTestElement(TestElement)
+     */
+    @Override
+    public void modifyTestElement(TestElement config) {
+        ConfigTestElement cfg = (ConfigTestElement ) config;
+        ConfigTestElement el = (ConfigTestElement) urlConfigGui.createTestElement();
+        cfg.clear(); 
+        cfg.addConfigElement(el);
+        super.configureTestElement(config);
+        if (retrieveEmbeddedResources.isSelected()) {
+            config.setProperty(new BooleanProperty(HTTPSamplerBase.IMAGE_PARSER, true));
+        } else {
+            config.removeProperty(HTTPSamplerBase.IMAGE_PARSER);
+        }
+        enableConcurrentDwn(retrieveEmbeddedResources.isSelected());
+        if (concurrentDwn.isSelected()) {
+            config.setProperty(new BooleanProperty(HTTPSamplerBase.CONCURRENT_DWN, true));
+        } else {
+            // The default is false, so we can remove the property to simplify JMX files
+            // This also allows HTTPDefaults to work for this checkbox
+            config.removeProperty(HTTPSamplerBase.CONCURRENT_DWN);
+        }
+        if(!StringUtils.isEmpty(concurrentPool.getText())) {
+            config.setProperty(new StringProperty(HTTPSamplerBase.CONCURRENT_POOL,
+                    concurrentPool.getText()));
+        } else {
+            config.setProperty(new StringProperty(HTTPSamplerBase.CONCURRENT_POOL,
+                    String.valueOf(HTTPSamplerBase.CONCURRENT_POOL_SIZE)));
+        }
+        if(useMD5.isSelected()) {
+            config.setProperty(new BooleanProperty(HTTPSamplerBase.MD5, true));
+        } else {
+            config.removeProperty(HTTPSamplerBase.MD5);
+        }
+        if (!StringUtils.isEmpty(embeddedRE.getText())) {
+            config.setProperty(new StringProperty(HTTPSamplerBase.EMBEDDED_URL_RE,
+                    embeddedRE.getText()));
+        } else {
+            config.removeProperty(HTTPSamplerBase.EMBEDDED_URL_RE);
+        }
+        
+        if(!StringUtils.isEmpty(sourceIpAddr.getText())) {
+            config.setProperty(new StringProperty(HTTPSamplerBase.IP_SOURCE,
+                    sourceIpAddr.getText()));
+            config.setProperty(new IntegerProperty(HTTPSamplerBase.IP_SOURCE_TYPE,
+                    sourceIpType.getSelectedIndex()));
+        } else {
+            config.removeProperty(HTTPSamplerBase.IP_SOURCE);
+            config.removeProperty(HTTPSamplerBase.IP_SOURCE_TYPE);
+        }
+
+        config.setProperty(HTTPSamplerBase.PROXYHOST, proxyHost.getText(),"");
+        config.setProperty(HTTPSamplerBase.PROXYPORT, proxyPort.getText(),"");
+        config.setProperty(HTTPSamplerBase.PROXYUSER, proxyUser.getText(),"");
+        config.setProperty(HTTPSamplerBase.PROXYPASS, String.valueOf(proxyPass.getPassword()),"");
+        config.setProperty(HTTPSamplerBase.IMPLEMENTATION, httpImplementation.getText(),"");
+        config.setProperty(HTTPSamplerBase.CONNECT_TIMEOUT, connectTimeOut.getText());
+        config.setProperty(HTTPSamplerBase.RESPONSE_TIMEOUT, responseTimeOut.getText());
+
+    }
+
+    /**
+     * Implements JMeterGUIComponent.clearGui
+     */
+    @Override
+    public void clearGui() {
+        super.clearGui();
+        retrieveEmbeddedResources.setSelected(false);
+        concurrentDwn.setSelected(false);
+        concurrentPool.setText(String.valueOf(HTTPSamplerBase.CONCURRENT_POOL_SIZE));
+        enableConcurrentDwn(false);
+        useMD5.setSelected(false);
+        urlConfigGui.clear();
+        embeddedRE.setText(""); // $NON-NLS-1$
+        sourceIpAddr.setText(""); // $NON-NLS-1$
+        sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
+        proxyHost.setText(""); // $NON-NLS-1$
+        proxyPort.setText(""); // $NON-NLS-1$
+        proxyUser.setText(""); // $NON-NLS-1$
+        proxyPass.setText(""); // $NON-NLS-1$
+        httpImplementation.setText(""); // $NON-NLS-1$
+        connectTimeOut.setText(""); // $NON-NLS-1$
+        responseTimeOut.setText(""); // $NON-NLS-1$
+    }
+
+    @Override
+    public void configure(TestElement el) {
+        super.configure(el);
+        AbstractTestElement samplerBase = (AbstractTestElement) el;
+        urlConfigGui.configure(el);
+        retrieveEmbeddedResources.setSelected(samplerBase.getPropertyAsBoolean(HTTPSamplerBase.IMAGE_PARSER));
+        concurrentDwn.setSelected(samplerBase.getPropertyAsBoolean(HTTPSamplerBase.CONCURRENT_DWN));
+        concurrentPool.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.CONCURRENT_POOL));
+        useMD5.setSelected(samplerBase.getPropertyAsBoolean(HTTPSamplerBase.MD5, false));
+        embeddedRE.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.EMBEDDED_URL_RE, ""));//$NON-NLS-1$
+        sourceIpAddr.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.IP_SOURCE)); //$NON-NLS-1$
+        sourceIpType.setSelectedIndex(
+                samplerBase.getPropertyAsInt(HTTPSamplerBase.IP_SOURCE_TYPE,
+                        HTTPSamplerBase.SOURCE_TYPE_DEFAULT));
+
+        proxyHost.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYHOST));
+        proxyPort.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYPORT));
+        proxyUser.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYUSER));
+        proxyPass.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.PROXYPASS));
+        httpImplementation.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.IMPLEMENTATION));
+        connectTimeOut.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.CONNECT_TIMEOUT));
+        responseTimeOut.setText(samplerBase.getPropertyAsString(HTTPSamplerBase.RESPONSE_TIMEOUT));
+    }
+
+    private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
 
         // URL CONFIG
-        urlConfigGui = new UrlConfigGui(true, true, true);
-        
+        urlConfigGui = new UrlConfigGui(false, true, false);
+
         // AdvancedPanel (embedded resources, source address and optional tasks)
         JPanel advancedPanel = new VerticalPanel();
         advancedPanel.add(createEmbeddedRsrcPanel());
-        if (!isAJP) {
-            advancedPanel.add(getTimeOutPanel());
-            advancedPanel.add(getImplementationPanel());
-            advancedPanel.add(createSourceAddrPanel());
-            advancedPanel.add(getProxyServerPanel());
-        }
-        
+        advancedPanel.add(getTimeOutPanel());
+        advancedPanel.add(getImplementationPanel());
+        advancedPanel.add(createSourceAddrPanel());
+        advancedPanel.add(getProxyServerPanel());
         advancedPanel.add(createOptionalTasksPanel());
-        
+
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.add(JMeterUtils
                 .getResString("web_testing_basic"), urlConfigGui);
         tabbedPane.add(JMeterUtils
                 .getResString("web_testing_advanced"), advancedPanel);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, makeTitlePanel(), tabbedPane);
-        splitPane.setOneTouchExpandable(true);
-        add(splitPane);
-    }
+        JPanel emptyPanel = new JPanel();
+        emptyPanel.setMaximumSize(new Dimension());
 
+        add(makeTitlePanel(), BorderLayout.NORTH);
+        add(tabbedPane, BorderLayout.CENTER);        
+        add(emptyPanel, BorderLayout.SOUTH);
+    }
+    
     private JPanel getTimeOutPanel() {
         JPanel timeOut = new HorizontalPanel();
         timeOut.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
@@ -251,7 +301,7 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
 
         return panel;
     }
-
+    
     protected JPanel createEmbeddedRsrcPanel() {
         // retrieve Embedded resources
         retrieveEmbeddedResources = new JCheckBox(JMeterUtils.getResString("web_testing_retrieve_images")); // $NON-NLS-1$
@@ -266,7 +316,7 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
             if (retrieveEmbeddedResources.isSelected() && e.getStateChange() == ItemEvent.SELECTED) { concurrentPool.setEnabled(true); }
             else { concurrentPool.setEnabled(false); }
         });
-        concurrentPool = new JTextField(2); // 2 column size
+        concurrentPool = new JTextField(2); // 2 columns size
         concurrentPool.setMinimumSize(new Dimension(10, (int) concurrentPool.getPreferredSize().getHeight()));
         concurrentPool.setMaximumSize(new Dimension(30, (int) concurrentPool.getPreferredSize().getHeight()));
 
@@ -276,26 +326,25 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
         embeddedRsrcPanel.add(retrieveEmbeddedResources);
         embeddedRsrcPanel.add(concurrentDwn);
         embeddedRsrcPanel.add(concurrentPool);
-
+        
         // Embedded URL match regex
         embeddedRE = new JLabeledTextField(JMeterUtils.getResString("web_testing_embedded_url_pattern"),20); // $NON-NLS-1$
-        embeddedRsrcPanel.add(embeddedRE);
+        embeddedRsrcPanel.add(embeddedRE); 
         
         return embeddedRsrcPanel;
     }
+    
+    protected JPanel createSourceAddrPanel() {
+        final JPanel sourceAddrPanel = new HorizontalPanel();
+        sourceAddrPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
+                .getResString("web_testing_source_ip"))); // $NON-NLS-1$
 
-    /**
-     * Create a panel containing the implementation details
-     *
-     * @return the panel
-     */
-    protected final JPanel getImplementationPanel(){
-        JPanel implPanel = new HorizontalPanel();
-        httpImplementation = new JLabeledChoice(JMeterUtils.getResString("http_implementation"), // $NON-NLS-1$
-                HTTPSamplerFactory.getImplementations());
-        httpImplementation.addValue("");
-        implPanel.add(httpImplementation);
-        return implPanel;
+        sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
+        sourceAddrPanel.add(sourceIpType);
+
+        sourceIpAddr = new JTextField();
+        sourceAddrPanel.add(sourceIpAddr);
+        return sourceAddrPanel;
     }
     
     protected JPanel createOptionalTasksPanel() {
@@ -306,60 +355,18 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
 
         // Use MD5
         useMD5 = new JCheckBox(JMeterUtils.getResString("response_save_as_md5")); // $NON-NLS-1$
+
         checkBoxPanel.add(useMD5);
 
         return checkBoxPanel;
     }
-    
-    protected JPanel createSourceAddrPanel() {
-        final JPanel sourceAddrPanel = new HorizontalPanel();
-        sourceAddrPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("web_testing_source_ip"))); // $NON-NLS-1$
 
-        // Add a new field source ip address (for HC implementations only)
-        sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
-        sourceAddrPanel.add(sourceIpType);
-
-        sourceIpAddr = new JTextField();
-        sourceAddrPanel.add(sourceIpAddr);
-        return sourceAddrPanel;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Dimension getPreferredSize() {
         return getMinimumSize();
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clearGui() {
-        super.clearGui();
-        retrieveEmbeddedResources.setSelected(false);
-        concurrentDwn.setSelected(false);
-        concurrentPool.setText(String.valueOf(HTTPSamplerBase.CONCURRENT_POOL_SIZE));
-        enableConcurrentDwn(false);
-        useMD5.setSelected(false);
-        urlConfigGui.clear();
-        embeddedRE.setText(""); // $NON-NLS-1$
-        if (!isAJP) {
-            sourceIpAddr.setText(""); // $NON-NLS-1$
-            sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
-            proxyHost.setText(""); // $NON-NLS-1$
-            proxyPort.setText(""); // $NON-NLS-1$
-            proxyUser.setText(""); // $NON-NLS-1$
-            proxyPass.setText(""); // $NON-NLS-1$
-            httpImplementation.setText(""); // $NON-NLS-1$
-            connectTimeOut.setText(""); // $NON-NLS-1$
-            responseTimeOut.setText(""); // $NON-NLS-1$
-        }
-    }
-    
-    private void enableConcurrentDwn(boolean enable) {
+    private void enableConcurrentDwn(final boolean enable) {
         if (enable) {
             concurrentDwn.setEnabled(true);
             embeddedRE.setEnabled(true);
@@ -373,6 +380,19 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
         }
     }
     
+    /**
+     * Create a panel containing the implementation details
+     *
+     * @return the panel
+     */
+    protected final JPanel getImplementationPanel(){
+        JPanel implPanel = new HorizontalPanel();
+        httpImplementation = new JLabeledChoice(JMeterUtils.getResString("http_implementation"), // $NON-NLS-1$
+                HTTPSamplerFactory.getImplementations());
+        httpImplementation.addValue("");
+        implPanel.add(httpImplementation);
+        return implPanel;
+    }
 
     /**
      * Create a panel containing the proxy server details

@@ -81,7 +81,7 @@ public class LdapExtTestSamplerGui extends AbstractSamplerGui {
     @Override
     public void modifyTestElement(TestElement sampler) {
         sampler.clear();
-        ((LDAPExtSampler) sampler).addTestElement(ldapDefaultPanel.createTestElement());
+        sampler.addTestElement(ldapDefaultPanel.createTestElement());
         super.configureTestElement(sampler);
     }
 
