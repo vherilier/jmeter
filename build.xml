@@ -2278,7 +2278,10 @@ run JMeter unless all the JMeter jars are added.
       bottom="Copyright &amp;#xA9; 1998-${THISYEAR} Apache Software Foundation. All Rights Reserved."
       packagenames="org.apache.jmeter.*,org.apache.jorphan.*"
       excludepackagenames="org.apache.jorphan.timer">
-      <classpath refid="classpath"/>
+      <classpath>
+        <path refid="classpath"/>
+        <path refid="logging.classpath"/>
+      </classpath>
       <link href="http://docs.oracle.com/javase/8/docs/api/"/>
     </javadoc>
     <!-- No need for Javadoc patch (CVE-2013-1571) now we are using Java 8 minimum -->
@@ -2421,7 +2424,7 @@ run JMeter unless all the JMeter jars are added.
     </condition>
     <tstamp>
       <!-- Use variable port to help avoid clashes on CI servers -->
-      <format property="rmi_port" pattern="1mmss"/>
+      <format property="rmi_port" pattern="2SSS"/>
     </tstamp>
     <parallel>
       <daemons>
@@ -2933,7 +2936,7 @@ run JMeter unless all the JMeter jars are added.
         <tokenfilter>
           <filetokenizer/>
           <!-- Replace version with a wildcard. e.g, foo-1.2.3.jar or foo-1.2.3.RELEASE.jar to foo-*.jar -->
-          <replaceregex pattern="-(\d+\.){2,}([A-Za-z]+\.)?(jar|zip)" replace="-*\1"/>
+          <replaceregex pattern="-(\d+\.){2,}([A-Za-z]+\.)?(jar|zip)" replace="-*\2"/>
         </tokenfilter>
       </filterchain>
     </loadresource>

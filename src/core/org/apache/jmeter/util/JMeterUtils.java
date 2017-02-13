@@ -33,13 +33,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -47,7 +47,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.plaf.FontUIResource;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jmeter.gui.GuiPackage;
@@ -1162,26 +1164,32 @@ public class JMeterUtils implements UnitTestManager {
     
     /**
      * Apply HiDPI scale factor on fonts
-     * @param scale flot scale to apply
+     * @param scale float scale to apply
      */
     public static void applyScaleOnFonts(final float scale) {
-        log.info("Applying HiDPI scale:"+scale);
+        log.info("Applying HiDPI scale: {}", scale);
         SwingUtilities.invokeLater(() -> {
-            Set<Object> keySet = UIManager.getLookAndFeelDefaults().keySet();
-            Object[] keys = keySet.toArray(new Object[keySet.size()]);
-            for (Object key : keys) {
-                if (key != null && key.toString().toLowerCase().contains("font")) {
-                    Font font = UIManager.getDefaults().getFont(key);
-                    if (font != null) {
-                        font = font.deriveFont(font.getSize() * scale);
-                        UIManager.put(key, font);
+            UIDefaults defaults = UIManager.getLookAndFeelDefaults();
+            // If I iterate over the entrySet under ubuntu with jre 1.8.0_121
+            // the font objects are missing, so iterate over the keys, only
+            for (Object key : new ArrayList<Object>(defaults.keySet())) {
+                Object value = defaults.get(key);
+                log.debug("Try key {} with value {}", key, value);
+                if (value instanceof Font) {
+                    Font font = (Font) value;
+                    final float newSize = font.getSize() * scale;
+                    if (font instanceof FontUIResource) {
+                        defaults.put(key, new FontUIResource(font.getName(),
+                                font.getStyle(), Math.round(newSize)));
+                    } else {
+                        defaults.put(key, font.deriveFont(newSize));
                     }
                 }
-            } 
+            }
             JMeterUtils.refreshUI();
         });
     }
-    
+
     /**
      * Refresh UI after LAF change or resizing
      */
