@@ -119,7 +119,7 @@
   <property name="findbugs.outName" value="reports/jmeter-fb" />
   <property name="skip.batchtest" value="false" />
   <property name="skip.bug52310" value="false" />
-  <property name="skip.test_https" value="false" />
+  <property name="skip.test_https" value="true" />
 
   <target name="findbugs" description="Run the stand-alone Findbugs detector">
     <echoproperties prefix="findbugs"/>
@@ -383,7 +383,6 @@
     <include name="${lib.dir}/${commons-codec.jar}"/>
     <include name="${lib.dir}/${commons-collections.jar}"/>
     <include name="${lib.dir}/${commons-dbcp2.jar}"/>
-    <include name="${lib.dir}/${commons-httpclient.jar}"/>
     <include name="${lib.dir}/${commons-io.jar}"/>
     <include name="${lib.dir}/${commons-jexl2.jar}"/>
     <include name="${lib.dir}/${commons-jexl3.jar}"/>
@@ -464,7 +463,6 @@
     <pathelement location="${lib.dir}/${commons-codec.jar}"/>
     <pathelement location="${lib.dir}/${commons-collections.jar}"/>
     <pathelement location="${lib.dir}/${commons-dbcp2.jar}"/>
-    <pathelement location="${lib.dir}/${commons-httpclient.jar}"/>
     <pathelement location="${lib.dir}/${commons-io.jar}"/>
     <pathelement location="${lib.dir}/${commons-jexl2.jar}"/>
     <pathelement location="${lib.dir}/${commons-jexl3.jar}"/>
@@ -2485,7 +2483,7 @@ run JMeter unless all the JMeter jars are added.
 
   <target name="batchtest" description="Run the batch test and compare output files" unless="${skip.batchtest}">
 
-    <!-- will be overwritten by antcall paramaters -->
+    <!-- will be overwritten by antcall parameters -->
     <property name="taskname" value="jmeter"/>
     <property name="remote" value="-X"/>
     <property name="batchtest.inp" location="${basedir}/bin/testfiles"/>
@@ -2704,6 +2702,14 @@ run JMeter unless all the JMeter jars are added.
 
     <antcall target="batchtest">
       <param name="batchtest.name" value="Http4ImplPreemptiveBasicAuth"/>
+    </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="TestKeepAlive"/>
+    </antcall>
+  	
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="TestHeaderManager"/>
     </antcall>
   </target>
 
@@ -3020,7 +3026,6 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="commons-codec"/>
     <process_jarfile jarname="commons-collections"/>
     <process_jarfile jarname="commons-dbcp2"/>
-    <process_jarfile jarname="commons-httpclient"/>
     <process_jarfile jarname="commons-io"/>
     <process_jarfile jarname="commons-jexl2"/>
     <process_jarfile jarname="commons-jexl3"/>
@@ -3119,6 +3124,8 @@ run JMeter unless all the JMeter jars are added.
       <fileset dir="${lib.dir}" includes="slf4j-nop-1.7.13.jar"/>
       <!-- tidy up unused commons-logging jar -->
       <fileset dir="${lib.dir}" includes="commons-logging-1.2.jar"/>
+      <!-- tidy up unused commons-httpclient jar -->
+      <fileset dir="${lib.dir}" includes="commons-httpclient-3.1.jar"/>
       <!-- tidy up unused htmlparser jars -->
       <fileset dir="${lib.dir}" includes="htmllexer-2.1.jar htmlparser-2.1.jar"/>
       <!-- tidy up unused logkit jars -->
@@ -3161,7 +3168,7 @@ run JMeter unless all the JMeter jars are added.
      </taskdef>
      <jacoco:agent property="jacocoagent"
                    destfile="reports/jacoco.exec"
-                   includes="org.apache.jmeter.*:org.apache.jorphan.*:org.apache.commons.cli.avalon.*:org.sl4j.impl.StaticLoggerBinder"
+                   includes="org.apache.jmeter.*:org.apache.jorphan.*:org.apache.commons.cli.avalon.*:org.sl4j.impl.StaticLoggerBinder:org.apache.http.impl.conn.*"
                    sessionid=""
      />
   </target>

@@ -82,12 +82,12 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.JMeterUtils;
-import org.slf4j.LoggerFactory;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.slf4j.Logger;
 import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Matcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Common constants and methods for HTTP samplers
@@ -838,7 +838,7 @@ public abstract class HTTPSamplerBase extends AbstractSampler
         HeaderManager mgr = getHeaderManager();
         HeaderManager lValue = value;
         if (mgr != null) {
-            lValue = mgr.merge(value, true);
+            lValue = mgr.merge(value);
             if (log.isDebugEnabled()) {
                 log.debug("Existing HeaderManager '" + mgr.getName() + "' merged with '" + lValue.getName() + "'");
                 for (int i = 0; i < lValue.getHeaders().size(); i++) {
@@ -1451,6 +1451,9 @@ public abstract class HTTPSamplerBase extends AbstractSampler
      */
     @Override
     public void testEnded() {
+        if (isConcurrentDwn()) {
+            ResourcesDownloader.getInstance().shrink();
+        }
     }
 
     /**
