@@ -694,8 +694,11 @@
         <pathelement location="${build.functions}"/>
         <pathelement location="${build.java}"/>
         <pathelement location="${build.jdbc}"/>
+        <pathelement location="${build.jms}"/>
         <pathelement location="${build.ldap}"/>
         <pathelement location="${build.mail}"/>
+        <pathelement location="${build.mongodb}"/>
+        <pathelement location="${build.native}"/>
         <pathelement location="${build.tcp}"/>
         <!-- Also include compiled jars to allow running tests without rebuilding source -->
         <fileset dir="${dest.jar}" includes="*.jar"/>
@@ -2453,7 +2456,8 @@ run JMeter unless all the JMeter jars are added.
         </java>
       </daemons>
       <sequential>
-        <sleep seconds="1"/>
+        <!-- Increase as necessary to ensure server has time to start -->
+        <sleep seconds="2"/>
         <antcall target="batchtest">
           <param name="remote" value="-Rlocalhost:${rmi_port}"/>
           <param name="taskname" value="client"/>
