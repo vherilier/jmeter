@@ -19,7 +19,6 @@
 package org.apache.jorphan.reflect;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -30,6 +29,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -148,12 +148,7 @@ public final class ClassFinder {
             if (!path.endsWith(DOT_JAR)) {
                 File dir = new File(path);
                 if (dir.exists() && dir.isDirectory()) {
-                    String[] jars = dir.list(new FilenameFilter() {
-                        @Override
-                        public boolean accept(File f, String name) {
-                            return name.endsWith(DOT_JAR);
-                        }
-                    });
+                    String[] jars = dir.list((f, name) -> name.endsWith(DOT_JAR));
                     if(jars != null) {
                         Collections.addAll(fullList, jars);
                     }
@@ -342,6 +337,7 @@ public final class ClassFinder {
     /**
      * Fix a path:
      * - replace "." by current directory
+     * - upcase the first character if it appears to be a drive letter
      * - trim any trailing spaces
      * - replace \ by /
      * - replace // by /
@@ -354,13 +350,17 @@ public final class ClassFinder {
         if (path.equals(".")) { // $NON-NLS-1$
             return System.getProperty("user.dir"); // $NON-NLS-1$
         }
-        path = path.trim().replace('\\', '/'); // $NON-NLS-1$ // $NON-NLS-2$
-        path = JOrphanUtils.substitute(path, "//", "/"); // $NON-NLS-1$// $NON-NLS-2$
-
-        while (path.endsWith("/")) { // $NON-NLS-1$
-            path = path.substring(0, path.length() - 1);
+        String resultPath = path;
+        if (path.length() > 3 && path.matches("[a-z]:\\\\.*")) { // lower-case drive letter?
+            resultPath = path.substring(0, 1).toUpperCase(Locale.ROOT) + path.substring(1);
         }
-        return path;
+        resultPath = resultPath.trim().replace('\\', '/'); // $NON-NLS-1$ // $NON-NLS-2$
+        resultPath = JOrphanUtils.substitute(resultPath, "//", "/"); // $NON-NLS-1$// $NON-NLS-2$
+
+        while (resultPath.endsWith("/")) { // $NON-NLS-1$
+            resultPath = resultPath.substring(0, resultPath.length() - 1);
+        }
+        return resultPath;
     }
 
     /**

@@ -13,52 +13,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ * 
  */
 
-package org.apache.jmeter.protocol.smtp.sampler.tools;
+package org.apache.jmeter.functions;
 
-import java.io.OutputStream;
+import org.apache.jmeter.util.JMeterUtils;
+import org.junit.After;
+import org.junit.Before;
 
 /**
- * Utility-class to calculate message size.
+ * Test JavaScript function with Rhino engine
+ *
  */
-public class CounterOutputStream extends OutputStream {
-    private long count = 0;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-
-    public void close() {}
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void flush() {}
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void write(byte[] b, int off, int len) {
-        count += len;
+public class TestJavascriptFunctionWithRhino extends TestJavascriptFunction {
+    @Before
+    public void setUp() {
+        JMeterUtils.getJMeterProperties().put("javascript.use_rhino", "true");       
+        super.setUp();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void write(int b) {
-        count++;
-    }
-
-    /**
-     * Returns message size
-     * @return Message size
-     */
-    public long getCount() {
-        return count;
+    
+    @After
+    public void tearDown() {
+        JMeterUtils.getJMeterProperties().remove("javascript.use_rhino");
     }
 }

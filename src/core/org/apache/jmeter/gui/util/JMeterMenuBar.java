@@ -73,6 +73,8 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
     private JMenuItem fileRevert;
 
     private JMenuItem fileLoad;
+    
+    private JMenu recentFilesOpen;
 
     private JMenuItem templates;
 
@@ -187,6 +189,7 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
     public void setProjectFileLoaded(String file) {
         if(fileLoadRecentFiles != null && file != null) {
             LoadRecentProject.updateRecentFileMenuItems(fileLoadRecentFiles, file);
+            recentFilesOpen.setEnabled(true);
         }
     }
 
@@ -293,6 +296,8 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
 
         JMenuItem heapDump = makeMenuItemRes("heap_dump", ActionNames.HEAP_DUMP);//$NON-NLS-1$
 
+        JMenuItem threadDump = makeMenuItemRes("thread_dump", ActionNames.THREAD_DUMP);//$NON-NLS-1$
+
         helpAbout = makeMenuItemRes("about", 'A', ActionNames.ABOUT); //$NON-NLS-1$
 
         helpMenu.add(contextHelp);
@@ -301,9 +306,10 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         helpMenu.add(setDebug);
         helpMenu.add(resetDebug);
         helpMenu.add(heapDump);
+        helpMenu.add(threadDump);
 
         addPluginsMenuItems(helpMenu, menuCreators, MENU_LOCATION.HELP);
-
+        
         helpMenu.addSeparator();
         helpMenu.add(helpAbout);
     }
@@ -520,6 +526,9 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         fileRevert.setEnabled(false);
 
         fileLoad = makeMenuItemRes("menu_open", 'O', ActionNames.OPEN, KeyStrokes.OPEN); //$NON-NLS-1$
+
+        recentFilesOpen = makeMenuRes("menu_recent"); //$NON-NLS-1$
+        recentFilesOpen.setEnabled(false);
         // Set default SAVE menu item to disabled since the default node that
         // is selected is ROOT, which does not allow items to be inserted.
         fileLoad.setEnabled(false);
@@ -537,6 +546,7 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         fileMenu.add(fileNew);
         fileMenu.add(templates);
         fileMenu.add(fileLoad);
+        fileMenu.add(recentFilesOpen);
         fileMenu.add(fileMerge);
         fileMenu.addSeparator();
         fileMenu.add(fileSave);
@@ -549,8 +559,9 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         // visible when needed
         fileLoadRecentFiles = LoadRecentProject.getRecentFileMenuItems();
         for(JComponent jc : fileLoadRecentFiles){
-            fileMenu.add(jc);
+            recentFilesOpen.add(jc);
         }
+        recentFilesOpen.setEnabled(LoadRecentProject.hasVisibleMenuItem(fileLoadRecentFiles));
 
         addPluginsMenuItems(fileMenu, menuCreators, MENU_LOCATION.FILE);
 

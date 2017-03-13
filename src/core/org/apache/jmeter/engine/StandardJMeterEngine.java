@@ -239,7 +239,7 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
             log.info("Test has ended on host "+host);
             long now=System.currentTimeMillis();
             System.out.println("Finished the test on host " + host + " @ "+new Date(now)+" ("+now+")" // NOSONAR Intentional
-            +(EXIT_AFTER_TEST ? " - exit requested." : ""));
+                    +(EXIT_AFTER_TEST ? " - exit requested." : ""));
             if (EXIT_AFTER_TEST){
                 exit();
             }
@@ -254,6 +254,10 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         }
     }
 
+    /**
+     * Stop Test Now
+     */
+    @Override
     public synchronized void stopTest() {
         stopTest(true);
     }
@@ -544,6 +548,9 @@ public class StandardJMeterEngine implements JMeterEngine, Runnable {
         }
     }
 
+    /**
+     * Clean shutdown ie, wait for end of current running samplers
+     */
     public void askThreadsToStop() {
         if (engine != null) { // Will be null if StopTest thread has started
             engine.stopTest(false);

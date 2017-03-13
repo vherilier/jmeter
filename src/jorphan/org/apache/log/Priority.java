@@ -28,6 +28,8 @@ import java.io.Serializable;
 public final class Priority
     implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * Developer orientated messages, usually used during development of product.
      */
@@ -123,6 +125,7 @@ public final class Priority
      *
      * @return the string describing priority
      */
+    @Override
     public String toString()
     {
         return "Priority[" + getName() + "/" + getValue() + "]";

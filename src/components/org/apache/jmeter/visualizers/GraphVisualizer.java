@@ -54,8 +54,6 @@ import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
  * and the standard deviation of the sampling process and outputs them as
  * autoscaling plots.
  *
- * Created February 8, 2001
- *
  */
 public class GraphVisualizer extends AbstractVisualizer implements ImageVisualizer, ItemListener, Clearable {
 
@@ -99,7 +97,7 @@ public class GraphVisualizer extends AbstractVisualizer implements ImageVisualiz
 
     private JTextField medianField;
 
-    private Deque<SampleResult> newSamples = new ConcurrentLinkedDeque<>();
+    private final Deque<SampleResult> newSamples = new ConcurrentLinkedDeque<>();
 
     /**
      * Constructor for the GraphVisualizer object.
@@ -128,8 +126,9 @@ public class GraphVisualizer extends AbstractVisualizer implements ImageVisualiz
      * @param s Sample
      * @deprecated use {@link GraphVisualizer#add(SampleResult)} instead
      */
+    @Deprecated
     public void updateGui(Sample s) {
-        JMeterUtils.runSafe(false, () -> _updateGui(s));
+        JMeterUtils.runSafe(false, () -> updateGuiInAWTThread(s));
     }
 
     // called inside AWT Thread
@@ -141,11 +140,11 @@ public class GraphVisualizer extends AbstractVisualizer implements ImageVisualiz
                 s = model.addSample(newSamples.pop());
             }
         }
-        _updateGui(s);
+        updateGuiInAWTThread(s);
     }
 
     // called inside AWT Thread
-    private void _updateGui(Sample s) {
+    private void updateGuiInAWTThread(Sample s) {
         if (s == null) {
             return;
         }

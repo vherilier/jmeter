@@ -1,30 +1,22 @@
 /*
- * ====================================================================
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- * ====================================================================
- *
- * This software consists of voluntary contributions made by many
- * individuals on behalf of the Apache Software Foundation.  For more
- * information on the Apache Software Foundation, please see
- * <http://www.apache.org/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
-package org.apache.http.impl.conn;
+
+package org.apache.jmeter.protocol.http.sampler.hc;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -32,8 +24,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.ClientConnectionOperator;
 import org.apache.http.conn.ClientConnectionRequest;
@@ -42,24 +32,30 @@ import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.ManagedClientConnection;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.impl.conn.DefaultClientConnectionOperator;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.conn.SchemeRegistryFactory;
+import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.pool.ConnPoolControl;
 import org.apache.http.pool.PoolStats;
 import org.apache.http.util.Args;
 import org.apache.http.util.Asserts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Copy/Paste of {@link PoolingClientConnectionManager} with a slight modification 
  * extracted from {@link PoolingHttpClientConnectionManager} to allow using 
  * better validation mechanism introduced in 4.4
  * TODO : Remove when full upgrade to new HttpClient 4.5.X API is finished
- * @deprecated Will be removed in 3.2, DO NOT USE
+ * Internal class, DO NOT USE
  */
-@Deprecated
 public class JMeterPoolingClientConnectionManager implements ClientConnectionManager, ConnPoolControl<HttpRoute> {
 
     private static final int VALIDATE_AFTER_INACTIVITY_DEFAULT = 1700;
 
-    private final Log log = LogFactory.getLog(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private final SchemeRegistry schemeRegistry;
 
@@ -120,6 +116,7 @@ public class JMeterPoolingClientConnectionManager implements ClientConnectionMan
     }
     
     /**
+     * @return configured period of inactivity in ms after which connections will be re-validated
      * @see #setValidateAfterInactivity(int)
      *
      * @since 4.5.2
@@ -134,6 +131,7 @@ public class JMeterPoolingClientConnectionManager implements ClientConnectionMan
      *   long, java.util.concurrent.TimeUnit) leased} to the consumer. Non-positive value passed
      * to this method disables connection validation. This check helps detect connections
      * that have become stale (half-closed) while kept inactive in the pool.
+     * @param ms period of inactivity in ms
      *
      * @see #leaseConnection(java.util.concurrent.Future, long, java.util.concurrent.TimeUnit)
      *
@@ -144,7 +142,7 @@ public class JMeterPoolingClientConnectionManager implements ClientConnectionMan
     }
 
     @Override
-    protected void finalize() throws Throwable {
+    protected void finalize() throws Throwable { // NOSONAR We know what we do here
         try {
             shutdown();
         } finally {
@@ -165,7 +163,7 @@ public class JMeterPoolingClientConnectionManager implements ClientConnectionMan
      * @return  the connection operator to use
      */
     protected ClientConnectionOperator createConnectionOperator(final SchemeRegistry schreg) {
-            return new DefaultClientConnectionOperator(schreg, this.dnsResolver);
+        return new DefaultClientConnectionOperator(schreg, this.dnsResolver);
     }
     @Override
     public SchemeRegistry getSchemeRegistry() {
@@ -254,8 +252,8 @@ public class JMeterPoolingClientConnectionManager implements ClientConnectionMan
             this.log.error("Unexpected exception leasing connection from pool", cause);
             // Should never happen
             throw new InterruptedException();
-        } catch (final TimeoutException ex) {
-            throw new ConnectionPoolTimeoutException("Timeout waiting for connection from pool");
+        } catch (final TimeoutException ex) { // NOSONAR Exception message is used
+            throw new ConnectionPoolTimeoutException("Timeout waiting for connection from pool, message:"+ex.getMessage());  
         }
     }
     @Override
@@ -314,9 +312,7 @@ public class JMeterPoolingClientConnectionManager implements ClientConnectionMan
     }
     @Override
     public void closeIdleConnections(final long idleTimeout, final TimeUnit tunit) {
-        if (this.log.isDebugEnabled()) {
-            this.log.debug("Closing connections idle longer than " + idleTimeout + " " + tunit);
-        }
+        this.log.debug("Closing connections idle longer than {} {}", idleTimeout, tunit);
         this.pool.closeIdle(idleTimeout, tunit);
     }
     @Override

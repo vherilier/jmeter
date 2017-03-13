@@ -47,6 +47,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestIterationListener;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.timers.Timer;
+import org.apache.jmeter.timers.TimerService;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.HashTreeTraverser;
@@ -79,6 +80,7 @@ public class JMeterThread implements Runnable, Interruptible {
 
     private static final float TIMER_FACTOR = JMeterUtils.getPropDefault("timer.factor", 1.0f);
 
+    private static final TimerService TIMER_SERVICE = TimerService.getInstance();
     /**
      * 1 as float
      */
@@ -284,7 +286,7 @@ public class JMeterThread implements Runnable, Interruptible {
             if (log.isInfoEnabled()) {
                 log.info("Stopping Test: {}", e.toString());
             }
-            stopTest();
+            shutdownTest();
         }
         catch (JMeterStopTestNowException e) { // NOSONAR
             if (log.isInfoEnabled()) {
@@ -431,7 +433,12 @@ public class JMeterThread implements Runnable, Interruptible {
             if (log.isInfoEnabled()) {
                 log.info("Stopping Test: {}", e.toString());
             }
-            stopTest();
+            shutdownTest();
+        } catch (JMeterStopTestNowException e) { // NOSONAR
+            if (log.isInfoEnabled()) {
+                log.info("Stopping Test with interruption of current samplers: {}", e.toString());
+            }
+            stopTestNow();
         } catch (JMeterStopThreadException e) { // NOSONAR
             if (log.isInfoEnabled()) {
                 log.info("Stopping Thread: {}", e.toString());
@@ -523,7 +530,7 @@ public class JMeterThread implements Runnable, Interruptible {
                 stopThread();
             }
             if (result.isStopTest() || (!result.isSuccessful() && onErrorStopTest)) {
-                stopTest();
+                shutdownTest();
             }
             if (result.isStopTestNow() || (!result.isSuccessful() && onErrorStopTestNow)) {
                 stopTestNow();
@@ -730,14 +737,20 @@ public class JMeterThread implements Runnable, Interruptible {
         return false;
     }
 
-    private void stopTest() {
+    /**
+     * Clean shutdown of test, which means wait for end of current running samplers
+     */
+    private void shutdownTest() {
         running = false;
-        log.info("Stop Test detected by thread: {}", threadName);
+        log.info("Shutdown Test detected by thread: {}", threadName);
         if (engine != null) {
             engine.askThreadsToStop();
         }
     }
 
+    /**
+     * Stop test immediately by interrupting running samplers
+     */
     private void stopTestNow() {
         running = false;
         log.info("Stop Test Now detected by thread: {}", threadName);
@@ -746,6 +759,9 @@ public class JMeterThread implements Runnable, Interruptible {
         }
     }
 
+    /**
+     * Clean Exit of current thread 
+     */
     private void stopThread() {
         running = false;
         log.info("Stop Thread detected by thread: {}", threadName);
@@ -842,10 +858,7 @@ public class JMeterThread implements Runnable, Interruptible {
                 if(scheduler) {
                     // We reduce pause to ensure end of test is not delayed by a sleep ending after test scheduled end
                     // See Bug 60049
-                    long now = System.currentTimeMillis();
-                    if(now + totalDelay > endTime) {
-                        totalDelay = endTime - now;
-                    }
+                    totalDelay = TIMER_SERVICE.adjustDelay(totalDelay, endTime);
                 }
                 TimeUnit.MILLISECONDS.sleep(totalDelay);
             } catch (InterruptedException e) {
