@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -363,21 +364,26 @@ public class HTTPJavaImpl extends HTTPAbstractImpl {
      *            for this <code>UrlConfig</code>
      * @param cacheManager the CacheManager (may be null)
      */
-    private void setConnectionHeaders(HttpURLConnection conn, URL u, HeaderManager headerManager, CacheManager cacheManager) {
+    private void setConnectionHeaders(HttpURLConnection conn, URL u, 
+            HeaderManager headerManager, CacheManager cacheManager) {
         // Add all the headers from the HeaderManager
+        Header[] arrayOfHeaders = null;
         if (headerManager != null) {
             CollectionProperty headers = headerManager.getHeaders();
             if (headers != null) {
+                int i=0;
+                arrayOfHeaders = new Header[headers.size()];
                 for (JMeterProperty jMeterProperty : headers) {
                     Header header = (Header) jMeterProperty.getObjectValue();
                     String n = header.getName();
                     String v = header.getValue();
+                    arrayOfHeaders[i++] = header;
                     conn.addRequestProperty(n, v);
                 }
             }
         }
         if (cacheManager != null){
-            cacheManager.setHeaders(conn, u);
+            cacheManager.setHeaders(conn, arrayOfHeaders, u);
         }
     }
 
@@ -484,7 +490,7 @@ public class HTTPJavaImpl extends HTTPAbstractImpl {
         // Check cache for an entry with an Expires header in the future
         final CacheManager cacheManager = getCacheManager();
         if (cacheManager != null && HTTPConstants.GET.equalsIgnoreCase(method)) {
-           if (cacheManager.inCache(url)) {
+           if (cacheManager.inCache(url, getHeaders(getHeaderManager()))) {
                return updateSampleResultForResourceInCache(res);
            }
         }
@@ -609,7 +615,9 @@ public class HTTPJavaImpl extends HTTPAbstractImpl {
             log.debug("End : sample");
             return res;
         } catch (IOException e) {
-            res.sampleEnd();
+            if (res.getEndTime() == 0) {
+                res.sampleEnd();
+            }
             savedConn = null; // we don't want interrupt to try disconnection again
             // We don't want to continue using this connection, even if KeepAlive is set
             if (conn != null) { // May not exist
@@ -624,6 +632,20 @@ public class HTTPJavaImpl extends HTTPAbstractImpl {
             savedConn = null; // we don't want interrupt to try disconnection again
             disconnect(conn); // Disconnect unless using KeepAlive
         }
+    }
+
+    private Header[] getHeaders(HeaderManager headerManager) {
+        if (headerManager != null) {
+            final CollectionProperty headers = headerManager.getHeaders();
+            if (headers != null) {
+                final List<Header> allHeaders = new ArrayList<>(headers.size());
+                for (final JMeterProperty jMeterProperty : headers) {
+                    allHeaders.add((Header) jMeterProperty.getObjectValue());
+                }
+                return allHeaders.toArray(new Header[allHeaders.size()]);
+            }
+        }
+        return new Header[0];
     }
 
     protected void disconnect(HttpURLConnection conn) {

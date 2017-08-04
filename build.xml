@@ -83,7 +83,7 @@
 
   -->
 
-  <!-- Minimal version of Apache Ant requiere by this Ant script -->
+  <!-- Minimal version of Apache Ant required by this Ant script -->
   <property name="ant.version.required" value="1.8.2" />
 
   <!-- Are we running under Gump? -->
@@ -123,6 +123,7 @@
   <property name="skip.batchtest_Http4ImplPreemptiveBasicAuth" value="false" />
   <property name="skip.batchtest_SlowCharsFeature" value="false" />
   <property name="skip.batchtest_TestKeepAlive" value="false" />
+  <property name="skip.batchtest_ResponseDecompression" value="false" />
   <property name="skip.test_https" value="true" />
   <property name="skip.test_http" value="false" />
   <property name="skip.test_TestDNSCacheManager.testWithCustomResolverAnd1Server" value="false" />
@@ -335,8 +336,8 @@
 
   <!-- Directory where Jacoco libraries live -->
   <!-- I'm to lazy to fix this now, so I tag along with rat & checkstyle,
-    which already live there. But: none of these should apear on the classpath
-    of Jmeter, neither runtime, nor compiletime. These are only required on the
+    which already live there. But: none of these should appear on the classpath
+    of JMeter, neither runtime, nor compiletime. These are only required on the
     Ant classpath, so judging from comments elsewhere, this is the wrong place.
   -->
   <property name="lib.coverage" location="lib/opt"/>
@@ -385,6 +386,7 @@
     <include name="${lib.dir}/${apache-bsf.jar}"/>
     <include name="${lib.dir}/${asm.jar}"/>
     <include name="${lib.dir}/${beanshell.jar}"/>
+    <include name="${lib.dir}/${dec.jar}"/>
     <include name="${lib.dir}/${caffeine.jar}"/>
     <include name="${lib.dir}/${commons-codec.jar}"/>
     <include name="${lib.dir}/${commons-collections.jar}"/>
@@ -400,6 +402,7 @@
     <include name="${lib.dir}/${freemarker.jar}"/>
     <include name="${lib.dir}/${groovy-all.jar}"/>
     <include name="${lib.dir}/${hamcrest-core.jar}"/>
+    <include name="${lib.dir}/${hamcrest-date.jar}"/>
     <include name="${lib.dir}/${httpclient.jar}"/>
     <include name="${lib.dir}/${httpasyncclient.jar}"/>
     <include name="${lib.dir}/${httpcore.jar}"/>
@@ -465,6 +468,7 @@
     <pathelement location="${lib.dir}/${apache-bsf.jar}"/>
     <pathelement location="${lib.dir}/${asm.jar}"/>
     <pathelement location="${lib.dir}/${beanshell.jar}"/>
+    <pathelement location="${lib.dir}/${dec.jar}"/>
     <pathelement location="${lib.dir}/${caffeine.jar}"/>
     <pathelement location="${lib.dir}/${commons-codec.jar}"/>
     <pathelement location="${lib.dir}/${commons-collections.jar}"/>
@@ -480,6 +484,7 @@
     <pathelement location="${lib.dir}/${freemarker.jar}"/>
     <pathelement location="${lib.dir}/${groovy-all.jar}"/>
     <pathelement location="${lib.dir}/${hamcrest-core.jar}"/>
+    <pathelement location="${lib.dir}/${hamcrest-date.jar}"/>
     <pathelement location="${lib.dir}/${httpclient.jar}"/>
     <pathelement location="${lib.dir}/${httpasyncclient.jar}"/>
     <pathelement location="${lib.dir}/${httpcore.jar}"/>
@@ -561,7 +566,7 @@
       JMeter version
       This is overridden for formal releases.
     -->
-    <property name="jmeter.version" value="3.2-SNAPSHOT"/>
+    <property name="jmeter.version" value="3.3-SNAPSHOT"/>
     <!-- Remember to change "docversion" below if necessary -->
     <condition property="implementation.version"
           value="${jmeter.version} r${svn.revision}" else="${jmeter.version}.${DSTAMP}">
@@ -901,7 +906,7 @@
      description="Compile everything and create the jars"/>
 
   <target name="package-and-check" depends="clean, download_jars, package, checkstyle, rat"
-     description="Compile, create jars and apply checkstyle before commiting code"/>
+     description="Compile, create jars and apply checkstyle before committing code"/>
 
   <target name="prepare-resources"
      description="Prepare some resources files, update date">
@@ -1359,6 +1364,7 @@ run JMeter unless all the JMeter jars are added.
     <include name="${src.test}/**"/>
     <include name="build.xml"/>
     <include name="build.properties"/>
+    <include name="${dest.jar.jmeter}/*.groovy"/>
     <include name="${dest.jar.jmeter}/testfiles/**"/>
     <exclude name="${dest.jar.jmeter}/testfiles/*.jmx"/>
     <exclude name="${dest.jar.jmeter}/testfiles/*.jtl"/>
@@ -1657,9 +1663,6 @@ run JMeter unless all the JMeter jars are added.
   <scriptdef name="svnmuccScript" language="beanshell">
     <classpath>
       <pathelement location="${lib.dir}/${beanshell.jar}"/>
-      <!-- Needed to work with Java 1.5 -->
-      <pathelement location="${lib.dir}/${apache-bsf.jar}"/>
-      <pathelement location="${lib.dir}/${jcl-over-slf4j.jar}"/>
     </classpath>
     <!-- type of script to create: upload, publish or delete -->
     <attribute name="type"/>
@@ -2259,7 +2262,7 @@ run JMeter unless all the JMeter jars are added.
       <format property="THISYEAR" pattern="yyyy"/>
     </tstamp>
 
-    <!-- JMeter Javadoc version (own variable is used so can be overriden independently) -->
+    <!-- JMeter Javadoc version (own variable is used so can be overridden independently) -->
     <property name="docversion" value="${jmeter.version}"/>
 
     <mkdir dir="${dest.docs.api}"/>
@@ -2513,7 +2516,7 @@ run JMeter unless all the JMeter jars are added.
     <!-- Fix the EOL in case the file was derived from the "wrong" archive type -->
     <fixcrlf encoding="${encoding}" srcdir="${batchtest.inp}" includes="${batchtest.name}.csv"/>
 
-    <echo level="info" message="Starting ${batchtest.name} with file ${batchtest.jmx} using ${remote} -D${batchtest.variable}=${batchtest.value}"/>
+    <echo level="info" message="Starting ${batchtest.name} with file ${batchtest.jmx} using ${remote} -J${batchtest.variable}=${batchtest.value}"/>
 
     <macrodef name="deleteworkfiles">
       <sequential>
@@ -2760,6 +2763,12 @@ run JMeter unless all the JMeter jars are added.
       <param name="batchtest.name" value="TestKeepAlive"/>
       <param name="batchtest.jmx" value="TestKeepAlive.jmx"/>
       <param name="skip.batchtest" value="${skip.batchtest_TestKeepAlive}" />
+    </antcall>
+      
+    <antcall target="batchtest">
+       <param name="batchtest.name" value="ResponseDecompression"/>
+       <param name="batchtest.jmx" value="ResponseDecompression.jmx"/>
+       <param name="skip.batchtest" value="${skip.batchtest_ResponseDecompression}" />
     </antcall>
 
     <antcall target="batchtest">
@@ -3110,6 +3119,7 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="bcprov" dest.dir="${lib.api}"/>
     <process_jarfile jarname="bcpkix" dest.dir="${lib.api}"/>
     <process_jarfile jarname="beanshell"/>
+    <process_jarfile jarname="dec"/>
     <process_jarfile jarname="caffeine"/>
     <process_jarfile jarname="commons-codec"/>
     <process_jarfile jarname="commons-collections"/>
@@ -3125,6 +3135,7 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="freemarker"/>
     <process_jarfile jarname="groovy-all"/>
     <process_jarfile jarname="hamcrest-core"/>
+    <process_jarfile jarname="hamcrest-date"/>
     <process_jarfile jarname="httpclient"/>
     <process_jarfile jarname="httpasyncclient"/>
     <process_jarfile jarname="httpcore"/>

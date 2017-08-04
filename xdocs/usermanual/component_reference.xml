@@ -18,7 +18,7 @@
  -->
 <!DOCTYPE document
 [
-<!ENTITY sect-num '19'>
+<!ENTITY sect-num '18'>
 <!ENTITY hellip   "&#x02026;" >
 <!ENTITY le       "&#x02264;" >
 <!ENTITY ge       "&#x02265;" >
@@ -49,7 +49,7 @@
  <note>
  Several test elements use JMeter properties to control their behaviour.
  These properties are normally resolved when the class is loaded.
- This generally occurs before the test plan starts, so it's not possible to change the settings by using the <code>__setProperty()</code> function.
+ This generally occurs before the test plan starts, so it's not possible to change the settings by using the <code><funclink name="__setProperty()"/></code> function.
 </note>
 <p>
 </p>
@@ -369,7 +369,7 @@ as a test plan created using a recorder would continue from the redirected URL.
 For the <code>POST</code> and <code>PUT</code> method, if there is no file to send, and the name(s) of the parameter(s) are omitted,
 then the body is created by concatenating all the value(s) of the parameters.
 Note that the values are concatenated without adding any end-of-line characters.
-These can be added by using the <code>__char()</code> function in the value fields.
+These can be added by using the <code><funclink name="__char()"/></code> function in the value fields.
 This allows arbitrary bodies to be sent.
 The values are encoded if the encoding flag is set.
 See also the MIME Type above how you can control the <code>content-type</code> request header that is sent.
@@ -441,7 +441,7 @@ Optional properties to allow change the method to get response size:<br></br></p
 <source>sampleresult.getbytes.headers_size=true</source></li></ul>
 
 <note>
-The <code>Java</code> and <code>HttpClient3</code> implementations do not include transport overhead such as
+The <code>Java</code> implementation does not include transport overhead such as
 chunk headers in the response body size.<br></br>
 The <code>HttpClient4</code> implementation does include the overhead in the response body size,
 so the value may be greater than the number of bytes in the response content.
@@ -2033,7 +2033,7 @@ count to three, JMeter will send a total of <code>2 * 3 = 6</code> HTTP Requests
                 element behaves slightly different.  Unless set to forever, it stops the test after
                 the given number of iterations have been done.</p>
                 <note>When using a function in this field, be aware it may be evaluated multiple times.
-                Example using <code>__Random</code> will evaluate it to a different value for each child samplers of Loop Controller and result into unwanted behaviour.</note></property>
+                Example using <code><funclink name="__Random"/></code> will evaluate it to a different value for each child samplers of Loop Controller and result into unwanted behaviour.</note></property>
 </properties>
 
 <example title="Looping Example" anchor="loop_example">
@@ -2100,7 +2100,7 @@ other controllers for each loop iteration. </p>
 <properties>
         <property name="name" required="No">Descriptive name for this controller that is shown in the tree.</property>
         <property name="ignore sub-controller blocks" required="No">If checked, the interleave controller will treat sub-controllers like single request elements and only allow one request per controller at a time.  </property>
-        <property name="Interleave accross threads" required="No">If checked, the interleave controller will alternate among each of its children controllers for each loop iteration but accross all threads, for example in a 
+        <property name="Interleave across threads" required="No">If checked, the interleave controller will alternate among each of its children controllers for each loop iteration but across all threads, for example in a 
         configuration with 4 threads and 3 child controllers, on first iteration
         thread 1 will run first child, thread 2 second child, thread 3 third child, thread 4 first child, on next iteration each thread will run the following child controller</property>
 </properties>
@@ -2255,7 +2255,7 @@ Please refer to the <complink name="Constant Throughput Timer"/> for an element 
         <note>
         No variables are made available to the script when the condition is interpreted as Javascript.
         If you need access to such variables, then select "<code>Interpret Condition as Variable Expression?</code>" and use
-        a <code>__jexl3</code>, <code>__groovy</code> or <code>__javaScript()</code> (discouraged for performance) function call. You can then use the objects "<code>vars</code>", "<code>log</code>", "<code>ctx</code>" etc. in the script.
+        a <code><funclink name="__jexl3"/></code>, <code><funclink name="__groovy"/></code> or <code><funclink name="__javaScript()"/></code> (discouraged for performance) function call. You can then use the objects "<code>vars</code>", "<code>log</code>", "<code>ctx</code>" etc. in the script.
         </note>
         <note>
         To test if a variable is undefined (or null) do the following, suppose var is named <code>myVar</code>, expression will be:
@@ -2272,7 +2272,7 @@ Please refer to the <complink name="Constant Throughput Timer"/> for an element 
     <property name="Interpret Condition as Variable Expression?" required="Yes">If this is selected, then the condition must be an expression that evaluates to "<code>true</code>" (case is ignored).
     For example, <code>${FOUND}</code> or <code>${__jexl3(${VAR} &gt; 100)}</code>.
     Unlike the Javascript case, the condition is only checked to see if it matches "<code>true</code>" (case is ignored).
-    <note>Checking this and using <code>__jexl3</code> or <code>__groovy</code> function in Condition is advised for performances</note>
+    <note>Checking this and using <code><funclink name="__jexl3"/></code> or <code><funclink name="__groovy"/></code> function in Condition is advised for performances</note>
     </property>
     <property name="Evaluate for all children" required="Yes">
     Should condition be evaluated for all children?
@@ -2323,7 +2323,7 @@ This allows the use of JavaScript, BeanShell, properties or variables as needed.
 <br></br>
 <note>
 Note that the condition is evaluated twice, once before starting sampling children and once at end of children sampling, so putting
-non idempotent functions in Condition (like <code>__counter</code>) can introduce issues.
+non idempotent functions in Condition (like <code><funclink name="__counter"/></code>) can introduce issues.
 </note>
 <br></br>
 For example:
@@ -3470,23 +3470,24 @@ By default, a Graphite implementation is provided.
     <figure width="1265" height="581" image="grafana_dashboard.png">Grafana dashboard</figure>
     
     
-    <p>Since JMeter 3.2, a new implementation (in Alpha state) has been added that allows writing directly in InfluxDB with a custom schema, it is called <code>InfluxdbBackendListenerClient</code> 
+    <p>Since JMeter 3.2, a new implementation (in Beta state) has been added that allows writing directly in InfluxDB with a custom schema, it is called <code>InfluxdbBackendListenerClient</code> 
       The following parameters apply to the <a href="../api/org/apache/jmeter/visualizers/backend/influxdb/InfluxdbBackendListenerClient.html">InfluxdbBackendListenerClient</a> implementation:</p>
 
     <properties>
         <property name="influxdbMetricsSender" required="Yes"><code>org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender</code></property>
         <property name="influxdbUrl" required="Yes">Influx URL (example : http://influxHost:8086/write?db=jmeter)</property>
-        <property name="application" required="Yes">Name of tested application</property>
+        <property name="application" required="Yes">Name of tested application. This value is stored in the 'events' measurement as a tag named 'application' </property>
         <property name="measurement" required="Yes">Measurement as per <a href="https://docs.influxdata.com/influxdb/v1.1/write_protocols/line_protocol_reference/">Influx Line Protocol Reference</a>. Defaults to "<code>jmeter</code>."</property>
         <property name="summaryOnly" required="Yes">Only send a summary with no detail. Defaults to <code>true</code>.</property>
         <property name="samplersRegex" required="Yes">Regular expression which will be matched against the names of samples and sent to the back end.</property>
-        <property name="testTitle" required="Yes">Test name. Defaults to <code>Test name</code>.</property>
+        <property name="testTitle" required="Yes">Test name. Defaults to <code>Test name</code>. This value is stored in the 'events' measurement as a field named 'text'. JMeter generate automatically at the start and the end of the test an annotation with this value ending with ' started' and ' ended'</property>
+        <property name="eventTags" required="No">List of tags. This value is stored in the 'events' measurement as a tag named 'tags'.</property>
         <property name="percentiles" required="Yes">The percentiles you want to send to the backend.
         A percentile may contain a fractional part, for example <code>12.5</code>.
         (The separator is always ".")
         List must be semicolon separated. Generally 3 or 4 values should be sufficient.</property>
     </properties>
-    <p>See also <a href="realtime-results.html" >Real-time results</a> for more details.</p>     
+    <p>See also <a href="realtime-results.html" >Real-time results</a> and <a href="http://docs.grafana.org/reference/annotations/#influxdb-annotations">Influxdb annotations in Grafana</a> for more details.</p>     
 </component>
 
 <a href="#">^</a>
@@ -3506,7 +3507,7 @@ By default, a Graphite implementation is provided.
 <description>
     <p>
     CSV Data Set Config is used to read lines from a file, and split them into variables.
-    It is easier to use than the <code>__CSVRead()</code> and <code>_StringFromFile()</code> functions.
+    It is easier to use than the <code><funclink name="__CSVRead()"/></code> and <code><funclink name="__StringFromFile()"/></code> functions.
     It is well suited to handling large numbers of variables, and is also useful for testing with
     "random" and unique values.</p>
     <p>Generating unique random values at run-time is expensive in terms of CPU and memory, so just create the data
@@ -3556,14 +3557,14 @@ By default, a Graphite implementation is provided.
     As a special case, the string "<code>\t</code>" (without quotes) in the delimiter field is treated as a Tab.
     </p>
     <p>
-    When the end of file (<code>EOF</code>) is reached, and the recycle option is <code>true</code>, reading starts again with the first line of the file.
+    When the end of file (<code><abbr title="end of file">EOF</abbr></code>) is reached, and the recycle option is <code>true</code>, reading starts again with the first line of the file.
     </p>
     <p>
     If the recycle option is <code>false</code>, and stopThread is <code>false</code>, then all the variables are set to <code>&lt;EOF&gt;</code> when the end of file is reached.
     This value can be changed by setting the JMeter property <code>csvdataset.eofstring</code>.
     </p>
     <p>
-    If the Recycle option is <code>false</code>, and Stop Thread is <code>true</code>, then reaching <code>EOF</code> will cause the thread to be stopped.
+    If the Recycle option is <code>false</code>, and Stop Thread is <code>true</code>, then reaching <code><abbr title="end of file">EOF</abbr></code> will cause the thread to be stopped.
     </p>
 </description>
 <properties>
@@ -3592,8 +3593,8 @@ By default, a Graphite implementation is provided.
   <property name="Allow quoted data?" required="Yes">Should the CSV file allow values to be quoted?
   If enabled, then values can be enclosed in <code>"</code> - double-quote - allowing values to contain a delimiter.
   </property>
-  <property name="Recycle on EOF?" required="Yes">Should the file be re-read from the beginning on reaching <code>EOF</code>? (default is <code>true</code>)</property>
-  <property name="Stop thread on EOF?" required="Yes">Should the thread be stopped on <code>EOF</code>, if Recycle is false? (default is <code>false</code>)</property>
+  <property name="Recycle on EOF?" required="Yes">Should the file be re-read from the beginning on reaching <code><abbr title="end of file">EOF</abbr></code>? (default is <code>true</code>)</property>
+  <property name="Stop thread on EOF?" required="Yes">Should the thread be stopped on <code><abbr title="end of file">EOF</abbr></code>, if Recycle is false? (default is <code>false</code>)</property>
   <property name="Sharing mode" required="Yes">
   <ul>
   <li><code>All threads</code> - (the default) the file is shared between all the threads.</li>
@@ -3804,7 +3805,6 @@ If the requested document has not changed since it was cached, then the response
 Likewise if the <code>Expires</code> date is in the future.
 This may cause problems for Assertions.
 </note>
-<note>Responses with a <code>Vary</code> header will not be cached.</note>
 </description>
 <properties>
   <property name="Name" required="No">Descriptive name for this element that is shown in the tree. </property>
@@ -4202,7 +4202,7 @@ So you cannot reference variables which are defined as part of a test run, e.g. 
 UDVs should not be used with functions that generate different results each time they are called.
 Only the result of the first function call will be saved in the variable. 
 </b>
-However, UDVs can be used with functions such as <code>__P()</code>, for example:
+However, UDVs can be used with functions such as <code><funclink name="__P()"/></code>, for example:
 </p>
 <source>
 HOST      ${__P(host,localhost)} 
@@ -4246,7 +4246,7 @@ You can reference variables defined in earlier UDVs or on the Test Plan.
 <description>
 <p>
 The Random Variable Config Element is used to generate random numeric strings and store them in variable for use later.
-It's simpler than using <complink name="User Defined Variables"/> together with the <code>__Random()</code> function.
+It's simpler than using <complink name="User Defined Variables"/> together with the <code><funclink name="__Random()"/></code> function.
 </p>
 <p>
 The output variable is constructed by using the random number generator,
@@ -4256,6 +4256,8 @@ The number is calculated using the formula <code>minimum+Random.nextInt(maximum-
 This means that <code>maximum-minimum</code> - i.e. the range - must be less than <code>2147483647</code>,
 however the <code>minimum</code> and <code>maximum</code> values can be any <code>long</code> values so long as the range is OK.
 </p>
+<note>As the random value is evaluated at the start of each iteration, it is probably not a good idea
+to use a variable other than a property as a value for the minimum or maximum. It would be zero on the first iteration.</note>
 </description>
 
 <properties>
@@ -4532,7 +4534,7 @@ These can be used anywhere within the expression and remain in effect until over
         </ul>
         <code>Equals</code> and <code>Substring</code> patterns are plain strings, not regular expressions.
         <code>NOT</code> may also be selected to invert the result of the check.
-        <code>OR</code> Apply each assertion in OR combination (if 1 pattern to test maches, Assertion will be ok) instead of AND (All patterns must match so that Assertion is OK).</property>
+        <code>OR</code> Apply each assertion in OR combination (if 1 pattern to test matches, Assertion will be ok) instead of AND (All patterns must match so that Assertion is OK).</property>
         <property name="Patterns to Test" required="Yes">A list of patterns to
         be tested.  
         Each pattern is tested separately. 
@@ -4912,7 +4914,7 @@ please ensure that you select "<code>Store the message using MIME (raw)</code>" 
     <property name="Name" required="No">Descriptive name for this element that is shown in the tree.</property>
     <property name="Verify Signature" required="Yes">If selected, the assertion will verify if it is a valid signature according to the parameters defined in the <code>Signer Certificate</code> box.</property>
     <property name="Message not signed" required="Yes">Whether or not to expect a signature in the message</property>
-    <property name="Signer Cerificate" required="Yes">"<code>No Check</code>" means that it will not perform signature verification. "<code>Check values</code>" is used to verify the signature against the inputs provided. And "<code>Certificate file</code>" will perform the verification against a specific certificate file.</property>
+    <property name="Signer Certificate" required="Yes">"<code>No Check</code>" means that it will not perform signature verification. "<code>Check values</code>" is used to verify the signature against the inputs provided. And "<code>Certificate file</code>" will perform the verification against a specific certificate file.</property>
     <property name="Message Position" required="Yes">
     The Mail sampler can retrieve multiple messages in a single sample.
     Use this field to specify which message will be checked.
@@ -5539,7 +5541,7 @@ this one will be used by "<code>Calculate Price cut off</code>".
     </ol>
     </example>
     
-    <p>See also the <complink name="Regular Expression Extractor"/> element, which is used to extract parametes names and values</p>
+    <p>See also the <complink name="Regular Expression Extractor"/> element, which is used to extract parameters names and values</p>
 </component>
 <links>
         <link href="../demos/RegEx-User-Parameters.jmx">Test Plan showing how to use RegEx User Parameters</link>
@@ -5759,7 +5761,7 @@ extracting the node as text or attribute value and store the result into the giv
         </property>
         <property name="Attribute" required="false">
             Name of attribute (as per HTML syntax) to extract from nodes that matched the selector. If empty, then the combined text of this element and all its children will be returned.<br/>
-            This is the equivalent <a href="http://jsoup.org/apidocs/org/jsoup/nodes/Node.html#attr%28java.lang.String%29">Element#attr(name)</a> function for JSoup if an atttribute is set.<br/>
+            This is the equivalent <a href="http://jsoup.org/apidocs/org/jsoup/nodes/Node.html#attr%28java.lang.String%29">Element#attr(name)</a> function for JSoup if an attribute is set.<br/>
             <figure width="826" height="275" image="css_extractor_attr.png">CSS Extractor with attribute value set</figure><br/>
             If empty this is the equivalent of <a href="http://jsoup.org/apidocs/org/jsoup/nodes/Element.html#text%28%29">Element#text()</a> function for JSoup if not value is set for attribute.
             <figure width="825" height="275" image="css_extractor_noattr.png">CSS Extractor with no attribute set</figure>
@@ -6687,7 +6689,7 @@ Jakarta ORO also supports zero-width look-ahead, so one can match <code>/images/
 but retain the trailing <code>/</code> in the output by using <code>(^/images(?=/))</code>.</p>
 
 <note>
-Note that the current version of Jakara ORO does not support look-behind - i.e. <code>(?&lt;=&hellip;)</code> or <code>(?&lt;!&hellip;)</code>.
+Note that the current version of Jakarta ORO does not support look-behind - i.e. <code>(?&lt;=&hellip;)</code> or <code>(?&lt;!&hellip;)</code>.
 </note>
 
 <p>Look out for overlapping matchers. For example the value <code>.*</code> as a regex in a variable named

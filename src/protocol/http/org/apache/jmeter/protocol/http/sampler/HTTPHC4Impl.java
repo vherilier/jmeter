@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import javax.security.auth.Subject;
 
@@ -61,11 +62,13 @@ import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.DeflateInputStream;
+import org.apache.http.client.entity.InputStreamFactory;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
@@ -79,6 +82,8 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.protocol.ResponseContentEncoding;
+import org.apache.http.config.Lookup;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.params.ConnRoutePNames;
@@ -97,6 +102,7 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -137,6 +143,8 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
+import org.apache.jorphan.util.JOrphanUtils;
+import org.brotli.dec.BrotliInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,6 +157,28 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     private static final int MAX_BODY_RETAIN_SIZE = JMeterUtils.getPropDefault("httpclient4.max_body_retain_size", 32 * 1024);
 
     private static final Logger log = LoggerFactory.getLogger(HTTPHC4Impl.class);
+    
+    private static final InputStreamFactory GZIP = new InputStreamFactory() {
+        @Override
+        public InputStream create(final InputStream instream) throws IOException {
+            return new GZIPInputStream(instream);
+        }
+    };
+
+    private static final InputStreamFactory DEFLATE = new InputStreamFactory() {
+        @Override
+        public InputStream create(final InputStream instream) throws IOException {
+            return new DeflateInputStream(instream);
+        }
+
+    };
+    
+    private static final InputStreamFactory BROTLI = new InputStreamFactory() {
+        @Override
+        public InputStream create(final InputStream instream) throws IOException {
+            return new BrotliInputStream(instream);
+        }
+    };
 
     /** retry count to be used (default 0); 0 = disable retries */
     private static final int RETRY_COUNT = JMeterUtils.getPropDefault("httpclient4.retrycount", 0);
@@ -214,7 +244,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
      * that HC core {@link ResponseContentEncoding} removes after uncompressing
      * See Bug 59401
      */
-    private static final HttpResponseInterceptor RESPONSE_CONTENT_ENCODING = new ResponseContentEncoding() {
+    private static final HttpResponseInterceptor RESPONSE_CONTENT_ENCODING = new ResponseContentEncoding(createLookupRegistry()) {
         @Override
         public void process(HttpResponse response, HttpContext context)
                 throws HttpException, IOException {
@@ -254,7 +284,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     /**
      * 1 HttpClient instance per combination of (HttpClient,HttpClientKey)
      */
-    private static final ThreadLocal<Map<HttpClientKey, HttpClient>> HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY = 
+    private static final ThreadLocal<Map<HttpClientKey, CloseableHttpClient>> HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY = 
         InheritableThreadLocal.withInitial(() -> new HashMap<>(5));
 
     // Scheme used for slow HTTP sockets. Cannot be set as a default, because must be set on an HttpClient instance.
@@ -309,6 +339,19 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     }
     
     /**
+     * Customize to plug Brotli
+     * @return {@link Lookup}
+     */
+    private static Lookup<InputStreamFactory> createLookupRegistry() {
+        return
+                RegistryBuilder.<InputStreamFactory>create()
+                .register("gzip", GZIP)
+                .register("br", BROTLI)
+                .register("x-gzip", GZIP)
+                .register("deflate", DEFLATE).build();
+    }
+
+    /**
      * Implementation that allows GET method to have a body
      */
     public static final class HttpGetWithEntity extends HttpEntityEnclosingRequestBase {
@@ -348,7 +391,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
 
         HTTPSampleResult res = createSampleResult(url, method);
 
-        HttpClient httpClient = setupClient(url, res);
+        CloseableHttpClient httpClient = setupClient(url);
 
         HttpRequestBase httpRequest = null;
         try {
@@ -397,17 +440,17 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
         res.sampleStart();
 
         final CacheManager cacheManager = getCacheManager();
-        if (cacheManager != null && HTTPConstants.GET.equalsIgnoreCase(method) && cacheManager.inCache(url)) {
+        if (cacheManager != null && HTTPConstants.GET.equalsIgnoreCase(method) && cacheManager.inCache(url, httpRequest.getAllHeaders())) {
             return updateSampleResultForResourceInCache(res);
         }
-
+        CloseableHttpResponse httpResponse = null;
         try {
             currentRequest = httpRequest;
             handleMethod(method, res, httpRequest, localContext);
             // store the SampleResult in LocalContext to compute connect time
             localContext.setAttribute(SAMPLER_RESULT_TOKEN, res);
             // perform the sample
-            HttpResponse httpResponse = 
+            httpResponse = 
                     executeRequest(httpClient, httpRequest, localContext, url);
 
             // Needs to be done after execute to pick up all the headers
@@ -510,6 +553,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             errorResult(e, res);
             return res;
         } finally {
+            JOrphanUtils.closeQuietly(httpResponse);
             currentRequest = null;
             JMeterContextService.getContext().getSamplerContext().remove(HTTPCLIENT_TOKEN);
         }
@@ -608,7 +652,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     /**
      * Execute request either as is or under PrivilegedAction 
      * if a Subject is available for url
-     * @param httpClient the {@link HttpClient} to be used to execute the httpRequest
+     * @param httpClient the {@link CloseableHttpClient} to be used to execute the httpRequest
      * @param httpRequest the {@link HttpRequest} to be executed
      * @param localContext th {@link HttpContext} to be used for execution
      * @param url the target url (will be used to look up a possible subject for the execution)
@@ -616,7 +660,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
      * @throws IOException
      * @throws ClientProtocolException
      */
-    private HttpResponse executeRequest(final HttpClient httpClient,
+    private CloseableHttpResponse executeRequest(final CloseableHttpClient httpClient,
             final HttpRequestBase httpRequest, final HttpContext localContext, final URL url)
             throws IOException, ClientProtocolException {
         AuthManager authManager = getAuthManager();
@@ -625,7 +669,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             if (subject != null) {
                 try {
                     return Subject.doAs(subject,
-                            (PrivilegedExceptionAction<HttpResponse>) () ->
+                            (PrivilegedExceptionAction<CloseableHttpResponse>) () ->
                                     httpClient.execute(httpRequest, localContext));
                 } catch (PrivilegedActionException e) {
                     log.error("Can't execute httpRequest with subject: {}", subject, e);
@@ -751,9 +795,9 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
         }
     }
 
-    private HttpClient setupClient(URL url, SampleResult res) {
+    private CloseableHttpClient setupClient(URL url) {
 
-        Map<HttpClientKey, HttpClient> mapHttpClientPerHttpClientKey = HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY.get();
+        Map<HttpClientKey, CloseableHttpClient> mapHttpClientPerHttpClientKey = HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY.get();
         
         final String host = url.getHost();
         String proxyHost = getProxyHost();
@@ -778,10 +822,10 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
         // Lookup key - must agree with all the values used to create the HttpClient.
         HttpClientKey key = new HttpClientKey(url, useProxy, proxyHost, proxyPort, proxyUser, proxyPass);
         
-        HttpClient httpClient = null;
+        CloseableHttpClient httpClient = null;
         boolean concurrentDwn = this.testElement.isConcurrentDwn();
         if(concurrentDwn) {
-            httpClient = (HttpClient) JMeterContextService.getContext().getSamplerContext().get(HTTPCLIENT_TOKEN);
+            httpClient = (CloseableHttpClient) JMeterContextService.getContext().getSamplerContext().get(HTTPCLIENT_TOKEN);
         }
         
         if (httpClient == null) {
@@ -1136,7 +1180,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
      * @param authManager {@link AuthManager}
      * @param key key
      */
-    private void setConnectionAuthorization(HttpClient client, URL url, AuthManager authManager, HttpClientKey key) {
+    private void setConnectionAuthorization(CloseableHttpClient client, URL url, AuthManager authManager, HttpClientKey key) {
         CredentialsProvider credentialsProvider = 
             ((AbstractHttpClient) client).getCredentialsProvider();
         if (authManager != null) {
@@ -1535,12 +1579,12 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
      */
     private void closeThreadLocalConnections() {
         // Does not need to be synchronised, as all access is from same thread
-        Map<HttpClientKey, HttpClient> mapHttpClientPerHttpClientKey = HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY.get();
+        Map<HttpClientKey, CloseableHttpClient> mapHttpClientPerHttpClientKey = HTTPCLIENTS_CACHE_PER_THREAD_AND_HTTPCLIENTKEY.get();
         if ( mapHttpClientPerHttpClientKey != null ) {
-            for ( HttpClient cl : mapHttpClientPerHttpClientKey.values() ) {
+            for ( CloseableHttpClient cl : mapHttpClientPerHttpClientKey.values() ) {
                 ((AbstractHttpClient) cl).clearRequestInterceptors(); 
                 ((AbstractHttpClient) cl).clearResponseInterceptors();
-                ((AbstractHttpClient) cl).close();
+                JOrphanUtils.closeQuietly(cl);
                 cl.getConnectionManager().shutdown();
             }
             mapHttpClientPerHttpClientKey.clear();

@@ -35,7 +35,7 @@
 
   <!-- Output method -->
   <xsl:output method="html" html-version="5.0" encoding="iso-8859-15"
-    indent="no" doctype-system="about:legacy-compat" />
+    indent="yes" doctype-system="about:legacy-compat" />
 
   <xsl:template match="document">
     <xsl:variable name="project" select="document('project.xml')/project" />
@@ -475,6 +475,21 @@
 
   <xsl:template match="complink">
     <xsl:call-template name="complink">
+      <xsl:with-param name="name" select="@name" />
+    </xsl:call-template>
+  </xsl:template>
+
+  <xsl:template name="funclink">
+    <xsl:param name="name" />
+    <a
+      href="{concat($relative-path, '/usermanual/functions.html#', translate(@name, ' ()', '_'))}"
+    >
+      <xsl:value-of select="@name" />
+    </a>
+  </xsl:template>
+
+  <xsl:template match="funclink">
+    <xsl:call-template name="funclink">
       <xsl:with-param name="name" select="@name" />
     </xsl:call-template>
   </xsl:template>

@@ -120,10 +120,6 @@ public class BackendListener extends AbstractTestElement
      * Create a BackendListener.
      */
     public BackendListener() {
-        synchronized (LOCK) {
-            queuesByTestElementName.clear();
-        }
-
         setArguments(new Arguments());
     }
 
@@ -193,7 +189,7 @@ public class BackendListener extends AbstractTestElement
     }
 
     /**
-     * Thread that dequeus data from queue to send it to {@link BackendListenerClient}
+     * Thread that dequeues data from queue to send it to {@link BackendListenerClient}
      */
     private static final class Worker extends Thread {
 
@@ -371,10 +367,16 @@ public class BackendListener extends AbstractTestElement
             if (log.isDebugEnabled()) {
                 log.debug("testEnded called on instance {}#{}", myName, listenerClientDataForName.instanceCount);
             }
-            listenerClientDataForName.instanceCount--;
-            if (listenerClientDataForName.instanceCount > 0){
-                // Not the last instance of myName
-                return;
+            if(listenerClientDataForName != null) {
+                listenerClientDataForName.instanceCount--;
+                if (listenerClientDataForName.instanceCount > 0){
+                    // Not the last instance of myName
+                    return;
+                } else {
+                    queuesByTestElementName.remove(myName);
+                }
+            } else {
+                log.error("No listener client data found for BackendListener {}", myName);
             }
         }
         try {

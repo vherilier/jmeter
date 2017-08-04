@@ -34,6 +34,9 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +68,10 @@ import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.security.AnyTypePermission;
+import com.thoughtworks.xstream.security.NoTypePermission;
 
 /**
  * This class contains the static utility methods used by JMeter.
@@ -495,6 +502,7 @@ public class JMeterUtils implements UnitTestManager {
     private static String getResStringDefault(String key, String defaultValue) {
         return getResStringDefault(key, defaultValue, null);
     }
+
     /**
      * Helper method to do the actual work of fetching resources; allows
      * getResString(S,S) to be deprecated without affecting getResString(S);
@@ -509,9 +517,10 @@ public class JMeterUtils implements UnitTestManager {
         String resString = null;
         try {
             ResourceBundle bundle = resources;
-            if(forcedLocale != null) {
-                bundle = ResourceBundle.getBundle("org.apache.jmeter.resources.messages", forcedLocale); // $NON-NLS-1$
+            if (forcedLocale != null || bundle == null) {
+                bundle = getBundle(forcedLocale);
             }
+            
             if (bundle.containsKey(resKey)) {
                 resString = bundle.getString(resKey);
             } else {
@@ -530,6 +539,43 @@ public class JMeterUtils implements UnitTestManager {
         }
         return resString;
     }
+
+    /**
+     * Try to get a {@link ResourceBundle} for the given {@code forcedLocale}.
+     * If none is found try to fallback to the bundle for the set {@link Locale}
+     * 
+     * @param forcedLocale the {@link Locale} which should be used first
+     * @return the resolved {@link ResourceBundle} or {@code null}, if none could be found
+     */
+    private static ResourceBundle getBundle(Locale forcedLocale) {
+        for (Locale locale: Arrays.asList(forcedLocale, getLocale())) {
+            if(locale != null) {
+                ResourceBundle bundle = ResourceBundle.getBundle("org.apache.jmeter.resources.messages", locale); // $NON-NLS-1$
+                if (bundle == null) {
+                    log.warn("Could not resolve ResourceBundle for Locale [{}]", locale);
+                } else {
+                    return bundle;
+                }
+            }
+        }
+        return new DummyResourceBundle();
+    }
+
+    /**
+     * Simple {@link ResourceBundle}, that handles questions for every key, by giving the key back as an answer.
+     */
+    private static class DummyResourceBundle extends ResourceBundle {
+
+        @Override
+        protected Object handleGetObject(String key) {
+            return "[" + key + "]";
+        }
+
+        @Override
+        public Enumeration<String> getKeys() {
+            return Collections.emptyEnumeration();
+        }
+    };
 
     /**
      * To get I18N label from properties file
@@ -1207,5 +1253,18 @@ public class JMeterUtils implements UnitTestManager {
                 w.pack();
             }
         }
+    }
+
+    /**
+     * Setup default security policy
+     * @param xstream {@link XStream}
+     */
+    public static void setupXStreamSecurityPolicy(XStream xstream) {
+        // This will lift the insecure warning
+        xstream.addPermission(NoTypePermission.NONE);
+        // We reapply very permissive policy
+        // See https://groups.google.com/forum/#!topic/xstream-user/wiKfdJPL8aY
+        // TODO : How much are we concerned by CVE-2013-7285 
+        xstream.addPermission(AnyTypePermission.ANY);
     }
 }

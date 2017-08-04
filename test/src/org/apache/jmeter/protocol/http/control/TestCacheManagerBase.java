@@ -18,6 +18,12 @@
 
 package org.apache.jmeter.protocol.http.control;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -32,8 +38,6 @@ import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public abstract class TestCacheManagerBase extends JMeterTestCase {
     protected static final String LOCAL_HOST = "http://localhost/";
@@ -82,7 +86,7 @@ public abstract class TestCacheManagerBase extends JMeterTestCase {
 
     protected abstract void setRequestHeaders();
 
-    private void sleepTill(long deadline) {
+    protected void sleepTill(long deadline) {
         while (System.currentTimeMillis() < deadline) {
             try {
                 Thread.sleep(100);
@@ -157,25 +161,75 @@ public abstract class TestCacheManagerBase extends JMeterTestCase {
 
     @Test
     public void testCacheVarySomething() throws Exception {
-        testCacheVary("Something");
+        String varyHeader = "Something";
+        testCacheVary(varyHeader, new Header[] { new Header(varyHeader, "value") },
+                new Header[] {
+                        new Header(varyHeader, "something completely different") });
     }
 
     @Test
     public void testCacheVaryAcceptEncoding() throws Exception {
-        testCacheVary("Accept-Encoding");
+        String varyHeader = "Accept-Encoding";
+        testCacheVary(varyHeader,
+                new Header[] { new Header(varyHeader, "value") }, new Header[] {
+                        new Header(varyHeader, "something completely different") });
     }
 
-    private void testCacheVary(String vary) throws Exception {
+    @Test
+    public void testCacheMultiValueVaryHeaders() throws Exception {
+        String varyHeader = "Accept-Encoding";
+        testCacheVary(varyHeader,
+                new Header[] { new Header(varyHeader, "value"),
+                        new Header(varyHeader, "another value") },
+                new Header[] { new Header(varyHeader,
+                        "something completely different") });
+    }
+
+    @Test
+    public void testCacheMultipleVaryHeaders() throws Exception {
+        String varyHeaderOne = "Accept-Encoding";
+        String varyHeaderTwo = "Something";
+        testCacheVary(varyHeaderOne + "," + varyHeaderTwo,
+                new Header[] { new Header(varyHeaderOne, "first value"),
+                        new Header(varyHeaderTwo, "another value") },
+                new Header[] { new Header(varyHeaderOne,
+                        "first") });
+    }
+
+    @Test
+    public void testCacheMultipleMultiVaryHeaders() throws Exception {
+        String varyHeaderOne = "Accept-Encoding";
+        String varyHeaderTwo = "Something";
+        testCacheVary(varyHeaderOne + "," + varyHeaderTwo,
+                new Header[] { new Header(varyHeaderOne, "first value"),
+                        new Header(varyHeaderOne, "second value"),
+                        new Header(varyHeaderTwo, "another value") },
+                new Header[] { new Header(varyHeaderOne, "first value"),
+                        new Header(varyHeaderOne, "another value") });
+    }
+
+    private String asString(Header[] headers) {
+        StringBuilder result = new StringBuilder();
+        for (Header header: headers) {
+            result.append(header.getName()).append(": ").append(header.getValue()).append("\n");
+        }
+        return result.toString();
+    }
+
+    private void testCacheVary(String vary, Header[] origHeaders, Header[] differentHeaders) throws Exception {
         this.cacheManager.setUseExpires(true);
         this.cacheManager.testIterationStart(null);
         assertNull("Should not find entry", getThreadCacheEntry(LOCAL_HOST));
-        assertFalse("Should not find valid entry", this.cacheManager.inCache(url));
+        assertFalse("Should not find valid entry", this.cacheManager.inCache(url, origHeaders));
         setExpires(makeDate(new Date(System.currentTimeMillis())));
         setCacheControl("public, max-age=5");
+        sampleResultOK.setRequestHeaders(asString(origHeaders));
         this.vary = vary;
         cacheResult(sampleResultOK);
-        assertNull("Should not find entry", getThreadCacheEntry(LOCAL_HOST));
-        assertFalse("Should not find valid entry", this.cacheManager.inCache(url));
+        assertNotNull("Should find entry with vary header", getThreadCacheEntry(LOCAL_HOST).getVaryHeader());
+        assertFalse("Should not find valid entry without headers", this.cacheManager.inCache(url));
+        assertTrue("Should find valid entry with headers", this.cacheManager.inCache(url, origHeaders));
+        assertFalse("Should not find valid entry with different header", this.cacheManager.inCache(url, differentHeaders));
         this.vary = null;
     }
 
@@ -290,7 +344,7 @@ public abstract class TestCacheManagerBase extends JMeterTestCase {
         assertNotNull("Should find entry", getThreadCacheEntry(LOCAL_HOST));
         assertFalse("Should not find valid entry", this.cacheManager.inCache(url));
     }
-
+    
     @Test
     public void testGetClearEachIteration() throws Exception {
         assertFalse("Should default not to clear after each iteration.", this.cacheManager.getClearEachIteration());
@@ -352,7 +406,7 @@ public abstract class TestCacheManagerBase extends JMeterTestCase {
         assertTrue("ThreadCache should be emptied by call to clear.", getThreadCache().isEmpty());
     }
 
-    private HTTPSampleResult getSampleResultWithSpecifiedResponseCode(String code) {
+    protected HTTPSampleResult getSampleResultWithSpecifiedResponseCode(String code) {
         HTTPSampleResult sampleResult = new HTTPSampleResult();
         sampleResult.setResponseCode(code);
         sampleResult.setHTTPMethod("GET");
@@ -368,7 +422,7 @@ public abstract class TestCacheManagerBase extends JMeterTestCase {
         return threadLocal.get();
     }
 
-    private CacheManager.CacheEntry getThreadCacheEntry(String url) throws Exception {
+    protected CacheManager.CacheEntry getThreadCacheEntry(String url) throws Exception {
         return getThreadCache().get(url);
     }
     

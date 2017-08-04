@@ -109,6 +109,36 @@ public class TestValueReplacer extends JMeterTestCase {
         }
 
         @Test
+        public void testPartialWordMatchesWithoutParens() throws Exception {
+            assertEquals("toto%40005", replaceWord("005", "toto%40005"));
+        }
+
+        @Test
+        public void testPartialWordMatchesWithParens() throws Exception {
+            assertEquals("toto%40${domainMatcher}", replaceWord("(005)", "toto%40005"));
+        }
+
+        @Test
+        public void testCompleteWordMatchesWithoutParens() throws Exception {
+            assertEquals("toto@${domainMatcher}", replaceWord("005", "toto@005"));
+        }
+
+        @Test
+        public void testCompleteWordMatchesWithParens() throws Exception {
+            assertEquals("toto@${domainMatcher}", replaceWord("(005)", "toto@005"));
+        }
+
+        private String replaceWord(String matchRegex, String testData) throws Exception {
+            TestPlan plan = new TestPlan();
+            plan.addParameter("domainMatcher", matchRegex);
+            ValueReplacer replacer = new ValueReplacer(plan);
+            TestElement element = new TestPlan();
+            element.setProperty(new StringProperty("mail", testData));
+            replacer.reverseReplace(element, true);
+            return element.getPropertyAsString("mail");
+        }
+
+        @Test
         public void testReplace() throws Exception {
             ValueReplacer replacer = new ValueReplacer();
             replacer.setUserDefinedVariables(variables.getUserDefinedVariables());
