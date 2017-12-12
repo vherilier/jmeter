@@ -23,6 +23,7 @@ import java.awt.HeadlessException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,6 +43,7 @@ import javax.swing.KeyStroke;
 import javax.swing.MenuElement;
 
 import org.apache.jmeter.control.Controller;
+import org.apache.jmeter.control.TestFragmentController;
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.JMeterGUIComponent;
 import org.apache.jmeter.gui.UndoHistory;
@@ -52,9 +54,10 @@ import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testbeans.TestBean;
 import org.apache.jmeter.testbeans.gui.TestBeanGUI;
+import org.apache.jmeter.testelement.NonTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestPlan;
-import org.apache.jmeter.testelement.WorkBench;
+import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.Printable;
 import org.apache.jorphan.gui.GuiUtils;
@@ -211,7 +214,6 @@ public final class MenuFactory {
      */
     public static void addFileMenu(JPopupMenu menu, boolean addSaveTestFragmentMenu) {
         // the undo/redo as a standard goes first in Edit menus
-        // maybe there's better place for them in JMeter?
         if(UndoHistory.isEnabled()) {
             addUndoItems(menu);
         }
@@ -242,13 +244,8 @@ public final class MenuFactory {
         JMenuItem disabled = makeMenuItemRes("disable", ActionNames.DISABLE);// $NON-NLS-1$
         JMenuItem enabled = makeMenuItemRes("enable", ActionNames.ENABLE);// $NON-NLS-1$
         boolean isEnabled = GuiPackage.getInstance().getTreeListener().getCurrentNode().isEnabled();
-        if (isEnabled) {
-            disabled.setEnabled(true);
-            enabled.setEnabled(false);
-        } else {
-            disabled.setEnabled(false);
-            enabled.setEnabled(true);
-        }
+        disabled.setEnabled(isEnabled);
+        enabled.setEnabled(!isEnabled);
         menu.add(enabled);
         menu.add(disabled);
         JMenuItem toggle = makeMenuItemRes("toggle", ActionNames.TOGGLE, KeyStrokes.TOGGLE);// $NON-NLS-1$
@@ -668,55 +665,50 @@ public final class MenuFactory {
      * @return whether it is OK to add the dragged nodes to this parent
      */
     public static boolean canAddTo(JMeterTreeNode parentNode, JMeterTreeNode[] nodes) {
-        if (null == parentNode) {
-            return false;
-        }
-        if (foundClass(nodes, new Class[]{WorkBench.class})){// Can't add a Workbench anywhere
-            return false;
-        }
-        if (foundClass(nodes, new Class[]{TestPlan.class})){// Can't add a TestPlan anywhere
+        if (parentNode == null
+                || foundClass(nodes, new Class[]{TestPlan.class})) {
             return false;
         }
         TestElement parent = parentNode.getTestElement();
 
         // Force TestFragment to only be pastable under a Test Plan
-        if (foundClass(nodes, new Class[]{org.apache.jmeter.control.TestFragmentController.class})){
-            if (parent instanceof TestPlan) {
-                return true;
-            }
+        if (foundClass(nodes, new Class[]{TestFragmentController.class})) {
+            return parent instanceof TestPlan;
+        }
+
+        // Cannot move Non-Test Elements from root of Test Plan or Test Fragment
+        if (foundMenuCategories(nodes, NON_TEST_ELEMENTS)
+                && !(parent instanceof TestPlan || parent instanceof TestFragmentController)) {
             return false;
         }
 
-        if (parent instanceof WorkBench) {// allow everything else
-            return true;
-        }
         if (parent instanceof TestPlan) {
-            if (foundClass(nodes,
-                     new Class[]{Sampler.class, Controller.class}, // Samplers and Controllers need not apply ...
-                     org.apache.jmeter.threads.AbstractThreadGroup.class)  // but AbstractThreadGroup (Controller) is OK
-                ){
-                return false;
-            }
-            return true;
+            return !foundClass(
+                    nodes,
+                    new Class[]{Sampler.class, Controller.class}, // Samplers and Controllers need not apply ...
+                    new Class[]{AbstractThreadGroup.class, NonTestElement.class});
         }
         // AbstractThreadGroup is only allowed under a TestPlan
-        if (foundClass(nodes, new Class[]{org.apache.jmeter.threads.AbstractThreadGroup.class})){
+        if (foundClass(nodes, new Class[]{AbstractThreadGroup.class})) {
             return false;
         }
         if (parent instanceof Controller) {// Includes thread group; anything goes
             return true;
         }
         if (parent instanceof Sampler) {// Samplers and Controllers need not apply ...
-            if (foundClass(nodes, new Class[]{Sampler.class, Controller.class})){
-                return false;
-            }
-            return true;
+            return !foundClass(nodes, new Class[]{Sampler.class, Controller.class});
         }
+
         // All other
         return false;
     }
 
-    // Is any node an instance of one of the classes?
+    /**
+     * Is any of nodes an instance of one of the classes?
+     * @param nodes Array of {@link JMeterTreeNode}
+     * @param classes Array of {@link Class}
+     * @return true if nodes is one of classes
+     */
     private static boolean foundClass(JMeterTreeNode[] nodes, Class<?>[] classes) {
         for (JMeterTreeNode node : nodes) {
             for (Class<?> aClass : classes) {
@@ -728,11 +720,36 @@ public final class MenuFactory {
         return false;
     }
 
-    // Is any node an instance of one of the classes, but not an exception?
-    private static boolean foundClass(JMeterTreeNode[] nodes, Class<?>[] classes, Class<?> except) {
+    /**
+     * Is any node an instance of one of the menu category?
+     * @param nodes Array of {@link JMeterTreeNode}
+     * @param category Category
+     * @return true if nodes is in category
+     */
+    private static boolean foundMenuCategories(JMeterTreeNode[] nodes, String category) {
+        return Arrays.stream(nodes)
+                .flatMap(node -> node.getMenuCategories().stream())
+                .anyMatch(category::equals);
+    }
+
+    /**
+     * Is any node an instance of one of the classes, but not an exceptions?
+     * @param nodes array of {@link JMeterTreeNode}
+     * @param classes Array of {@link Class}
+     * @param exceptions Array of {@link Class}
+     * @return boolean
+     */
+    private static boolean foundClass(JMeterTreeNode[] nodes, Class<?>[] classes, Class<?>[] exceptions) {
         for (JMeterTreeNode node : nodes) {
             Object userObject = node.getUserObject();
-            if (!except.isInstance(userObject)) {
+            boolean isException = false;
+            for (Class<?> except : exceptions) {
+                if (except.isInstance(userObject)) {
+                    isException = true;
+                    break;
+                }
+            }
+            if (!isException) {
                 for (Class<?> aClass : classes) {
                     if (aClass.isInstance(userObject)) {
                         return true;
@@ -803,8 +820,8 @@ public final class MenuFactory {
      * [This is so Thread Group appears before setUp and tearDown]
      */
     private static void sortPluginMenus() {
-        for(Entry<String, List<MenuInfo>> me : menuMap.entrySet()){
-            Collections.sort(me.getValue(), new MenuInfoComparator(!me.getKey().equals(THREADS)));
+        for (Entry<String, List<MenuInfo>> me : menuMap.entrySet()) {
+            me.getValue().sort(new MenuInfoComparator(!me.getKey().equals(THREADS)));
         }
     }
 }

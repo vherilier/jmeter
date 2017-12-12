@@ -43,9 +43,7 @@ import org.slf4j.LoggerFactory;
  * @since 2.12
  */
 public class UndoHistory implements TreeModelListener, Serializable {
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 1L;
     
     /**
@@ -59,14 +57,10 @@ public class UndoHistory implements TreeModelListener, Serializable {
 
     private static final int HISTORY_SIZE = JMeterUtils.getPropDefault("undo.history.size", 0);
 
-    /**
-     * flag to prevent recursive actions
-     */
+    /** flag to prevent recursive actions */
     private boolean working = false;
 
-    /**
-     * History listeners
-     */
+    /** History listeners */
     private List<HistoryListener> listeners = new ArrayList<>();
 
     private final UndoManager manager = new UndoManager();
@@ -310,6 +304,9 @@ public class UndoHistory implements TreeModelListener, Serializable {
     }
 
     void endUndoTransaction() {
+        if(!isEnabled()) {
+            return;
+        }
         if (!isTransaction()) {
             log.error("Undo transaction ended without beginning", new Exception());
             return;
@@ -322,7 +319,9 @@ public class UndoHistory implements TreeModelListener, Serializable {
     }
 
     void beginUndoTransaction() {
-        transactions.add(new SimpleCompoundEdit());
+        if (isEnabled()) {
+            transactions.add(new SimpleCompoundEdit());
+        }
     }
 
     boolean isTransaction() {

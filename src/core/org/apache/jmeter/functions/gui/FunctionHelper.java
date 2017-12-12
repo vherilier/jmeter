@@ -56,6 +56,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.LocaleChangeEvent;
 import org.apache.jmeter.util.LocaleChangeListener;
 import org.apache.jorphan.gui.ComponentUtil;
+import org.apache.jorphan.gui.GuiUtils;
 import org.apache.jorphan.gui.JLabeledChoice;
 import org.apache.jorphan.gui.JLabeledTextField;
 import org.slf4j.Logger;
@@ -135,7 +136,7 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
 
     private void initializeFunctionList() {
         String[] functionNames = CompoundVariable.getFunctionNames();
-        Arrays.sort(functionNames, (o1, o2) -> o1.compareToIgnoreCase(o2));
+        Arrays.sort(functionNames, String::compareToIgnoreCase);
         functionList = new JLabeledChoice(JMeterUtils.getResString("choose_function"), functionNames); //$NON-NLS-1$
         functionList.addChangeListener(this);
     }
@@ -143,14 +144,7 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
     @Override
     public void stateChanged(ChangeEvent event) {
         try {
-            Arguments args = new Arguments();
-            Function function = CompoundVariable.getFunctionClass(functionList.getText()).newInstance();
-            List<String> argumentDesc = function.getArgumentDesc();
-            for (String help : argumentDesc) {
-                args.addArgument(help, ""); //$NON-NLS-1$
-            }
-            parameterPanel.configure(args);
-            parameterPanel.revalidate();
+            initParameterPanel();
             getContentPane().remove(parameterPanel);
             this.pack();
             getContentPane().add(parameterPanel, BorderLayout.CENTER);
@@ -158,8 +152,24 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
             this.validate();
             resultTextArea.setText("");
             this.repaint();
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException ex) {
+            log.info("Exception during stateChanged", ex);
         }
+    }
+
+    /**
+     * @throws InstantiationException if function instantiation fails
+     * @throws IllegalAccessException if function instantiation fails
+     */
+    protected void initParameterPanel() throws InstantiationException, IllegalAccessException {
+        Arguments args = new Arguments();
+        Function function = CompoundVariable.getFunctionClass(functionList.getText()).newInstance();
+        List<String> argumentDesc = function.getArgumentDesc();
+        for (String help : argumentDesc) {
+            args.addArgument(help, ""); //$NON-NLS-1$
+        }
+        parameterPanel.configure(args);
+        parameterPanel.revalidate();
     }
 
     @Override
@@ -183,6 +193,7 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
         }
         functionCall.append("}");
         cutPasteFunction.setText(functionCall.toString());
+        GuiUtils.copyTextToClipboard(cutPasteFunction.getText());
         CompoundVariable function = new CompoundVariable(functionCall.toString());
         try {
             resultTextArea.setText(function.execute().trim());
@@ -208,5 +219,17 @@ public class FunctionHelper extends JDialog implements ActionListener, ChangeLis
         setTitle(JMeterUtils.getResString("function_helper_title")); //$NON-NLS-1$
         this.getContentPane().removeAll(); // so we can add them again in init
         init();
+    }
+    
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (visible) {
+            try {
+                initParameterPanel();
+            } catch (InstantiationException | IllegalAccessException ex) {
+                log.error("Error initializing parameter panel", ex);
+            }
+        }
     }
 }

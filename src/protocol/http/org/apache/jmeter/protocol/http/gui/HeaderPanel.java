@@ -46,16 +46,23 @@ import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.gui.GuiUtils;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Allows the user to specify if she needs HTTP header services, and give
  * parameters for this service.
- *
  */
-public class HeaderPanel extends AbstractConfigGui implements ActionListener
-{
+public class HeaderPanel extends AbstractConfigGui implements ActionListener {
+    /** When pasting from the clipboard, split lines on linebreak */
+    private static final String CLIPBOARD_LINE_DELIMITER = "\n"; //$NON-NLS-1$
+
+    /** When pasting from the clipboard, split parameters on ':' */
+    private static final String CLIPBOARD_COLON_DELIMITER = ":"; //$NON-NLS-1$
+
+    /** When pasting from the clipboard, split parameters on '\t' */
+    private static final String CLIPBOARD_TAB_DELIMITER = "\t";
+    
     private static final long serialVersionUID = 241L;
 
     private static final Logger log = LoggerFactory.getLogger(HeaderPanel.class);
@@ -250,15 +257,15 @@ public class HeaderPanel extends AbstractConfigGui implements ActionListener
             if(clipboardContent == null) {
                 return;
             }
-            String[] clipboardLines = clipboardContent.split("\n"); // $NON-NLS-1$
+            String[] clipboardLines = clipboardContent.split(CLIPBOARD_LINE_DELIMITER); // $NON-NLS-1$
             for (String clipboardLine : clipboardLines) {
-                int index = clipboardLine.indexOf(":"); // $NON-NLS-1$
+                int index = clipboardLine.indexOf(CLIPBOARD_COLON_DELIMITER); // $NON-NLS-1$
                 if(index < 0) {
                     // when pasting from another header panel the values are separated with '\t'
-                    index = clipboardLine.indexOf("\t");
+                    index = clipboardLine.indexOf(CLIPBOARD_TAB_DELIMITER);
                 }
                 if (index > 0) {
-                    Header header = new Header(clipboardLine.substring(0, index), clipboardLine.substring(index+1));
+                    Header header = new Header(clipboardLine.substring(0, index).trim(), clipboardLine.substring(index+1).trim());
                     headerManager.add(header);
                 }
             }

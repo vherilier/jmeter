@@ -18,7 +18,7 @@
 <project name="JMeter" default="install" basedir="."
     xmlns:rat="antlib:org.apache.rat.anttasks"
     xmlns:jacoco="antlib:org.jacoco.ant"
-    xmlns="antlib:org.apache.tools.ant" 
+    xmlns="antlib:org.apache.tools.ant"
     xmlns:if="ant:if" >
   <description>
 
@@ -85,7 +85,7 @@
   -->
 
   <!-- Minimal version of Apache Ant required by this Ant script -->
-  <property name="ant.version.required" value="1.8.2" />
+  <property name="ant.version.required" value="1.9.1" />
 
   <!-- Are we running under Gump? -->
   <property name="gump.run" value="false"/>
@@ -139,7 +139,7 @@
               output="xml:withMessages"
               reportlevel="${findbugs.level}"
               excludeFilter="fb-excludes.xml"
-              jvmargs="-Xms512m -Xmx512m"
+              jvmargs="-Xms512m -Xmx1024m"
               omitVisitors="InefficientStringBuffering"
               outputFile="${findbugs.outName}.xml" >
       <sourcePath path="${src.core}" />
@@ -402,6 +402,7 @@
     <include name="${lib.dir}/${commons-math3.jar}"/>
     <include name="${lib.dir}/${commons-net.jar}"/>
     <include name="${lib.dir}/${commons-pool2.jar}"/>
+    <include name="${lib.dir}/${darcula.jar}"/>
     <include name="${lib.dir}/${dnsjava.jar}"/>
     <include name="${lib.dir}/${freemarker.jar}"/>
     <include name="${lib.dir}/${groovy-all.jar}"/>
@@ -484,6 +485,7 @@
     <pathelement location="${lib.dir}/${commons-math3.jar}"/>
     <pathelement location="${lib.dir}/${commons-net.jar}"/>
     <pathelement location="${lib.dir}/${commons-pool2.jar}"/>
+    <pathelement location="${lib.dir}/${darcula.jar}"/>
     <pathelement location="${lib.dir}/${dnsjava.jar}"/>
     <pathelement location="${lib.dir}/${freemarker.jar}"/>
     <pathelement location="${lib.dir}/${groovy-all.jar}"/>
@@ -517,6 +519,9 @@
     <pathelement location="${lib.dir}/${serializer.jar}"/>
     <pathelement location="${lib.dir}/${slf4j-api.jar}"/>
     <pathelement location="${lib.dir}/${slf4j-ext.jar}"/>
+    <pathelement location="${lib.dir}/${spock.jar}"/>
+    <pathelement location="${lib.dir}/${cglib-nodep.jar}"/>
+    <pathelement location="${lib.dir}/${objenesis.jar}"/>
     <pathelement location="${lib.dir}/${jtidy.jar}"/>
     <pathelement location="${lib.dir}/${tika-core.jar}"/>
     <pathelement location="${lib.dir}/${tika-parsers.jar}"/>
@@ -570,7 +575,7 @@
       JMeter version
       This is overridden for formal releases.
     -->
-    <property name="jmeter.version" value="3.4-SNAPSHOT"/>
+    <property name="jmeter.version" value="4.0-SNAPSHOT"/>
     <!-- Remember to change "docversion" below if necessary -->
     <condition property="implementation.version"
           value="${jmeter.version} r${svn.revision}" else="${jmeter.version}.${DSTAMP}">
@@ -724,6 +729,35 @@
         <path refid="logging.classpath"/>
       </classpath>
     </javac>
+
+    <!-- Compile Spock tests (groovy) -->
+    <taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc">
+      <classpath>
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+      </classpath>
+    </taskdef>
+    <groovyc srcdir="${src.test}" destdir="${build.test}" encoding="${encoding}">
+      <classpath>
+        <pathelement location="${build.jorphan}"/>
+        <pathelement location="${build.core}"/>
+        <pathelement location="${build.components}"/>
+        <pathelement location="${build.http}"/>
+        <pathelement location="${build.ftp}"/>
+        <pathelement location="${build.functions}"/>
+        <pathelement location="${build.java}"/>
+        <pathelement location="${build.jdbc}"/>
+        <pathelement location="${build.ldap}"/>
+        <pathelement location="${build.mail}"/>
+        <pathelement location="${build.tcp}"/>
+        <!-- Include compiled jars to allow running tests without rebuilding source -->
+        <fileset dir="${dest.jar}" includes="*.jar"/>
+        <path refid="classpath"/>
+      </classpath>
+      <!-- Compile JUnit tests (Java) -->
+      <javac source="${src.java.version}" debug="on" target="${target.java.version}"
+             deprecation="${deprecation}" encoding="${encoding}">
+      </javac>
+    </groovyc>
   </target>
 
   <target name="compile-ftp" depends="compile-jorphan,compile-core" description="Compile components specific to FTP sampling.">
@@ -1010,6 +1044,8 @@ run JMeter unless all the JMeter jars are added.
         excludes="**/*.properties,org/apache/jmeter/images/toolbar/icons-custom/**"/>
       <fileset dir="${src.core}" includes="**/*.properties">
         <exclude name="*eucJP*"/>
+      </fileset>
+      <fileset dir="${src.core}" includes="**/*.xml">
       </fileset>
       <!-- This file is used by the jmeter -h option -->
       <fileset dir="${src.core}" includes="org/apache/jmeter/help.txt"/>
@@ -2214,7 +2250,7 @@ run JMeter unless all the JMeter jars are added.
     <checksum algorithm="MD5" file="${path}" property="md5"/>
     <echo message="${md5} *${_base}" file="${path}.md5"/>
     <echo message="Creating SHA-512 for ${path}"/>
-  	<checksum algorithm="SHA-512" file="${path}" property="sha512"/>
+    <checksum algorithm="SHA-512" file="${path}" property="sha512"/>
     <echo message="${sha512} *${_base}" file="${path}.sha512"/>
   </target>
 
@@ -2643,7 +2679,7 @@ run JMeter unless all the JMeter jars are added.
     <echo level="info">${batchtest.name} output files compared OK</echo>
 
     <local         name="BatchTestLocal.len"/>
-    <!-- We define "BatchTestLocal.len" property only if log file is empty 
+    <!-- We define "BatchTestLocal.len" property only if log file is empty
       or  batchtest.ignoreErrorLogs is false
     -->
     <condition property="BatchTestLocal.len">
@@ -2735,10 +2771,39 @@ run JMeter unless all the JMeter jars are added.
       <param name="batchtest.jmx" value="TEST_HTTPS.jmx"/>
       <param name="skip.batchtest" value="${skip.test_https}" />
     </antcall>
-      
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="TestCookieManager"/>
+      <param name="batchtest.jmx" value="TestCookieManager.jmx"/>
+    </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="TCP_TESTS"/>
+      <param name="batchtest.jmx" value="TCP_TESTS.jmx"/>
+      <param name="batchtest.ignoreErrorLogs" value="true" />
+    </antcall>
+
     <antcall target="batchtest">
       <param name="batchtest.name" value="JDBC_TESTS"/>
       <param name="batchtest.jmx" value="JDBC_TESTS.jmx"/>
+      <param name="batchtest.ignoreErrorLogs" value="true" />
+    </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="JMS_TESTS"/>
+      <param name="batchtest.jmx" value="JMS_TESTS.jmx"/>
+      <param name="batchtest.ignoreErrorLogs" value="true" />
+    </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="OS_TESTS"/>
+      <param name="batchtest.jmx" value="OS_TESTS.jmx"/>
+    </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="FTP_TESTS"/>
+      <param name="batchtest.jmx" value="FTP_TESTS.jmx"/>
+      <param name="batchtest.ignoreErrorLogs" value="true" />
     </antcall>
 
     <antcall target="batchtest">
@@ -2780,7 +2845,7 @@ run JMeter unless all the JMeter jars are added.
       <param name="batchtest.jmx" value="TestKeepAlive.jmx"/>
       <param name="skip.batchtest" value="${skip.batchtest_TestKeepAlive}" />
     </antcall>
-      
+
     <antcall target="batchtest">
        <param name="batchtest.name" value="ResponseDecompression"/>
        <param name="batchtest.jmx" value="ResponseDecompression.jmx"/>
@@ -3149,6 +3214,7 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="commons-math3"/>
     <process_jarfile jarname="commons-net"/>
     <process_jarfile jarname="commons-pool2"/>
+    <process_jarfile jarname="darcula"/>
     <process_jarfile jarname="dnsjava"/>
     <process_jarfile jarname="freemarker"/>
     <process_jarfile jarname="groovy-all"/>
@@ -3185,6 +3251,9 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="log4j-1.2-api"/>
     <process_jarfile jarname="log4j-core"/>
     <process_jarfile jarname="log4j-slf4j-impl"/>
+    <process_jarfile jarname="spock"/>
+    <process_jarfile jarname="cglib-nodep"/>
+    <process_jarfile jarname="objenesis"/>
     <process_jarfile jarname="jtidy"/>
     <process_jarfile jarname="tika-core"/>
     <process_jarfile jarname="tika-parsers"/>
@@ -3198,6 +3267,10 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="xpp3"/>
     <process_jarfile jarname="xstream"/>
     <process_jarfile jarname="hsqldb" dest.dir="${lib.coverage}" />
+    <process_jarfile jarname="activemq-all" dest.dir="${lib.coverage}" />
+    <process_jarfile jarname="mina-core" dest.dir="${lib.coverage}" />
+    <process_jarfile jarname="ftplet-api" dest.dir="${lib.coverage}" />
+    <process_jarfile jarname="ftpserver-core" dest.dir="${lib.coverage}" />
     <process_jarfile jarname="jacocoant" dest.dir="${lib.coverage}" />
     <process_jarfile jarname="sonarqube-ant-task" dest.dir="${lib.coverage}" />
   </target>
@@ -3233,7 +3306,7 @@ run JMeter unless all the JMeter jars are added.
     <delete verbose="true">
       <!-- bcprov jars no longer have the same prefix so the wildcard delete does not work; drop any old ones -->
       <fileset dir="${lib.api}" includes="bcmail-jdk15-*.jar bcprov-jdk15-*.jar"/>
-      <fileset dir="${lib.dir}" includes="ApacheJMeter_slf4j_logkit.jar" />
+      <fileset dir="${lib.dir}" includes="ApacheJMeter_slf4j_logkit.jar bsh-2.0b5.jar" />
       <!-- tidy up unused Excalibur jars -->
       <fileset dir="${lib.dir}" includes="avalon-framework-4.1.4.jar excalibur-datasource-2.1.jar excalibur-instrument-1.0.jar excalibur-logger-1.1.jar excalibur-pool-api-2.1.jar excalibur-pool-impl-2.1.jar excalibur-pool-instrumented-2.1.jar"/>
       <!-- jdom jar has moved; drop the old one -->
@@ -3292,7 +3365,7 @@ run JMeter unless all the JMeter jars are added.
      />
   </target>
 
-  <target name="_coverage.report" depends="_coverage.prepare, init-svnVersion, init-version">
+  <target name="_coverage.report" depends="_coverage.prepare, init-version">
     <jacoco:report>
         <executiondata>
             <file file="reports/jacoco.exec"/>
@@ -3341,7 +3414,9 @@ run JMeter unless all the JMeter jars are added.
     </jacoco:report>
   </target>
 
-  <target name="coverage"  depends="ant-version,_coverage.prepare, test-both, _allbatchtests, _coverage.report"/>
+  <target name="coverage-travis"  depends="ant-version,_coverage.prepare, test, _coverage.report"/>
+
+  <target name="coverage"  depends="ant-version,_coverage.prepare, test-both, _allbatchtests, init-svnVersion, _coverage.report"/>
 
   <target name="_check_exists" if="_check_exists">
     <fail message="Invalid call sequence - file.exists should not be defined" if="file.exists"/>
@@ -3361,57 +3436,18 @@ run JMeter unless all the JMeter jars are added.
     </antcall>
   </target>
 
-  <!-- Special: process to get RSyntaxTextArea-->
-  <!-- Useless since rsyntaxtextarea artifacts are published to Maven Repo since 9th july 2014 (JMeter 2.12) -->
-  <!--
-  <target name="_process_rsyntaxtextarea">
-      <available file="./lib/${rsyntaxtextarea.jar}" property="rsyntaxtextarea.exists"/>
-      <antcall target="_get_rsyntaxtextarea"/>
-  </target>
-  -->
-  <!-- Get RSyntaxTextArea binary zip file, unpack it, pick up jar file and remove the zip -->
-  <!-- Useless since rsyntaxtextarea artifacts are published to Maven Repo since 9th july 2014 (JMeter 2.12) -->
-  <!--
-  <target name="_get_rsyntaxtextarea" unless="rsyntaxtextarea.exists">
-    <property name="loc" value="${rsyntaxtextarea.loc}"/>
-    <property name="zip" value="${rsyntaxtextarea.name}_${rsyntaxtextarea.version}.zip"/>
-    <property name="jar" value="${rsyntaxtextarea.name}.jar"/>
-    <property name="md5" value="${rsyntaxtextarea.md5}"/>
-    <property name="path" value="./lib"/>
-    <get src="${loc}/${zip}"
-         dest="${build.dir}/${zip}"
-         usetimestamp="true" ignoreerrors="false"/>
-    <unzip dest="${build.dir}" src="${build.dir}/${zip}">
-      <patternset>
-        <include name="**/${jar}"/>
-      </patternset>
-      <mapper type="flatten"/>
-    </unzip>
-    <antcall target="_checkMD5">
-      <param name="file" value="${build.dir}/${jar}"/>
-      <param name="path" value="${build.dir}"/>
-      <param name="md5"  value="${md5}"/>
-    </antcall>
-    <delete>
-      <fileset dir="${path}" includes="${rsyntaxtextarea.name}-*.jar"/>
-    </delete>
-    <move preservelastmodified="true" overwrite="true"
-        file="${build.dir}/${jar}" tofile="${path}/${rsyntaxtextarea.jar}" verbose="true"/>
-    <delete file="${build.dir}/${zip}"/>
-  </target>
-  -->
-
   <!-- Need to define config_loc for use by Eclipse -->
   <property name="config_loc" value="."/>
   <target name="checkstyle">
     <available property="checkstyle.jar.available" file="${lib.opt}/${checkstyle-all.jar}"/>
-    <fail message="This task requires checkstyle, please run download_checkstyle target to download checkstyle" unless="checkstyle.jar.available"/>
+    <fail message="This task requires checkstyle, please run download_checkstyle target to download checkstyle"
+          unless="checkstyle.jar.available"/>
 
-    <antcall target="_process_checkstyle_jars"></antcall>
+    <antcall target="_process_checkstyle_jars"/>
     <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
              classpath="${lib.opt}/${checkstyle-all.jar}"/>
     <checkstyle config="checkstyle.xml">
-      <fileset dir="src" includes="**/*.java"/>
+      <fileset dir="src" includes="**/*"/>
       <formatter type="plain"/>
       <formatter type="xml" toFile="build/checkstyle_errors.xml"/>
     </checkstyle>
@@ -3420,7 +3456,8 @@ run JMeter unless all the JMeter jars are added.
 
   <target name="rat">
     <available property="rat.jar.available" file="${lib.opt}/${rat.jar}"/>
-    <fail message="This task requires Apache Creadur RAT, please run download_rat target to download it" unless="rat.jar.available"/>
+    <fail message="This task requires Apache Creadur RAT, please run download_rat target to download it"
+          unless="rat.jar.available"/>
     <taskdef
       uri="antlib:org.apache.rat.anttasks"
       resource="org/apache/rat/anttasks/antlib.xml">
@@ -3620,7 +3657,7 @@ run JMeter unless all the JMeter jars are added.
 
   <target name="sonar" depends="compile, install, coverage, _sonar" />
 
-  <target name="nightlysonar" depends="_coverage.prepare, nightly, _coverage.report, _sonar" />
+  <target name="nightlysonar" depends="_coverage.prepare, nightly, init-svnVersion, _coverage.report, _sonar" />
 
   <target name="setproxy" if="${proxy.use}">
     <setproxy proxyhost="${proxy.host}" proxyport="${proxy.port}"

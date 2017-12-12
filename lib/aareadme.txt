@@ -26,7 +26,7 @@ bsf-2.4.0.jar (org.apache.bsf)
 http://jakarta.apache.org/site/downloads/downloads_bsf.cgi
 - BSF test elements (sampler etc.)
 
-bsh-2.0b5.jar (org.bsh)
+bsh-2.0b6.jar (org.bsh)
 -------------
 - BeanShell test elements
 
@@ -92,12 +92,17 @@ commons-text-1.1
 https://commons.apache.org/proper/commons-text/
 - Random Strings
 
+darcula
+-----------------
+https://github.com/bulenkov/Darcula/
+- Look and Feel
+
 dnsjava-2.1.8
 -----------------
 http://www.dnsjava.org/download/
 - DNSCacheManager
 
-groovy-all-2.4.12
+groovy-all-2.4.13
 ----------------------
 Advised scripting language for JSR223 Test Elements
 
@@ -172,9 +177,9 @@ ph-commons-8.6.6
 https://github.com/phax/ph-commons
 - CssParser
 
-rhino-1.7.7.1
+rhino-1.7.7.2
 --------
-http://www.mozilla.org/rhino/download.html
+https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Rhino/Download_Rhino
 - javascript function
 - IfController
 - WhileController

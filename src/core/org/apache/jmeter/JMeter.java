@@ -355,6 +355,7 @@ public class JMeter implements JMeterPlugin {
         splash.showScreen();
         String jMeterLaf = LookAndFeelCommand.getJMeterLaf();
         try {
+            log.info("Setting LAF to: {}", jMeterLaf);
             UIManager.setLookAndFeel(jMeterLaf);
         } catch (Exception ex) {
             log.warn("Could not set LAF to: {}", jMeterLaf, ex);
@@ -375,7 +376,9 @@ public class JMeter implements JMeterPlugin {
         MainFrame main = new MainFrame(treeModel, treeLis);
         splash.setProgress(100);
         ComponentUtil.centerComponentInWindow(main, 80);
+        main.setLocationRelativeTo(splash);
         main.setVisible(true);
+        main.toFront();
         instance.actionPerformed(new ActionEvent(main, 1, ActionNames.ADD_ALL));
         if (testFile != null) {
             try {

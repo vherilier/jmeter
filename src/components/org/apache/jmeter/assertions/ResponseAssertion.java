@@ -65,6 +65,8 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
     private static final String RESPONSE_HEADERS = "Assertion.response_headers"; // $NON-NLS-1$
     
     private static final String REQUEST_HEADERS = "Assertion.request_headers"; // $NON-NLS-1$
+    
+    private static final String REQUEST_DATA = "Assertion.request_data"; // $NON-NLS-1$
 
     private static final String ASSUME_SUCCESS = "Assertion.assume_success"; // $NON-NLS-1$
 
@@ -145,6 +147,10 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
     public void setTestFieldRequestHeaders() {
         setTestField(REQUEST_HEADERS);
     }
+    
+    public void setTestFieldRequestData() {
+        setTestField(REQUEST_DATA);
+    }
 
     public boolean isTestFieldURL(){
         return SAMPLE_URL.equals(getTestField());
@@ -174,12 +180,16 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
         return REQUEST_HEADERS.equals(getTestField());
     }
     
+    public boolean isTestFieldRequestData(){
+        return REQUEST_DATA.equals(getTestField());
+    }
+    
     private void setTestType(int testType) {
         setProperty(new IntegerProperty(TEST_TYPE, testType));
     }
 
     private void setTestTypeMasked(int testType) {
-        int value = getTestType() & ~(TYPE_MASK) | testType;
+        int value = getTestType() & ~TYPE_MASK | testType;
         setProperty(new IntegerProperty(TEST_TYPE, value));
     }
 
@@ -304,6 +314,8 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
             toCheck = response.getResponseMessage();
         } else if (isTestFieldRequestHeaders()) {
             toCheck = response.getRequestHeaders();
+        } else if (isTestFieldRequestData()) {
+            toCheck = response.getSamplerData();
         } else if (isTestFieldResponseHeaders()) {
             toCheck = response.getResponseHeaders();
         } else { // Assume it is the URL
@@ -335,7 +347,6 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
             return result.setResultForNull();
         }
 
-        boolean pass = true;
         boolean hasTrue = false;
         ArrayList<String> allCheckMessage = new ArrayList<>();
         try {
@@ -357,7 +368,7 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
                 } else {
                     found = localMatcher.matches(toCheck, pattern);
                 }
-                pass = notTest ? !found : found;
+                boolean pass = notTest ? !found : found;
                 if (orTest) {
                     if (!pass) {
                         log.debug("Failed: {}", stringPattern);
@@ -413,6 +424,8 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
             sb.append("message");
         } else if (isTestFieldRequestHeaders()) {
             sb.append("request headers");
+        } else if (isTestFieldRequestData()) {
+            sb.append("request data");
         } else if (isTestFieldResponseHeaders()) {
             sb.append("headers");
         } else if (isTestFieldResponseDataAsDocument()) {
