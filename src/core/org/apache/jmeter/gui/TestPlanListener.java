@@ -13,14 +13,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
+ *
  */
 
-package org.apache.jorphan.test;
+package org.apache.jmeter.gui;
 
 /**
- * Used to tag tests which need to be run on their own (in serial) because
- * either, they cause other tests to fail, or they fail when run in parallel.
+ * Implement this interface to be informed about Test plan being cleared
+ * to react to such events.
+ * @since 4.0
+ *
  */
-public interface JMeterSerialTest {
+public interface TestPlanListener {
+    /**
+     * Called before current test plan is cleared
+     */
+    void beforeTestPlanCleared();
+    
+    /**
+     * Called after current test plan has been cleared
+     */
+    void afterTestPlanCleared();
+
+    /**
+     * Called after a new test plan has been loaded
+     */
+    void testPlanLoaded();
 }

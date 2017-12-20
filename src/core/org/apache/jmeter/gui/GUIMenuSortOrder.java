@@ -13,14 +13,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
  */
 
-package org.apache.jorphan.test;
+package org.apache.jmeter.gui;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.apache.jmeter.gui.util.MenuInfo;
 
 /**
- * Used to tag tests which need to be run on their own (in serial) because
- * either, they cause other tests to fail, or they fail when run in parallel.
+ * Annotation to allow specific ordering of this item in the GUI Menu
+ * @since 4.0
  */
-public interface JMeterSerialTest {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface GUIMenuSortOrder {
+    int value() default MenuInfo.SORT_ORDER_DEFAULT;
 }

@@ -13,14 +13,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- * 
  */
 
-package org.apache.jorphan.test;
+package org.apache.jmeter.gui.util;
 
 /**
- * Used to tag tests which need to be run on their own (in serial) because
- * either, they cause other tests to fail, or they fail when run in parallel.
+ * Indicates a menu separator when building {@link MenuInfo} lists in {@link MenuFactory}
+ * @since 4.0
  */
-public interface JMeterSerialTest {
+public class MenuSeparatorInfo extends MenuInfo {
+    public MenuSeparatorInfo() {
+        super("separator", "javax.swing.JPopupMenu.Separator");
+    }
 }

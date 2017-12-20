@@ -18,6 +18,7 @@
 
 package org.apache.jmeter.gui.util;
 
+import org.apache.jmeter.gui.GUIMenuSortOrder;
 import org.apache.jmeter.gui.JMeterGUIComponent;
 
 /**
@@ -25,19 +26,20 @@ import org.apache.jmeter.gui.JMeterGUIComponent;
  */
 public class MenuInfo {
 
+    public static final int SORT_ORDER_DEFAULT = 100;
     private final String label;
-
     private final String drawer;
 
     private final String className;
-
     private final JMeterGUIComponent guiComp;
+    private final int sortOrder;
 
     public MenuInfo(String displayLabel, String displayDrawer, String classFullName) {
         label = displayLabel;
         drawer = displayDrawer;
         className = classFullName;
         guiComp = null;
+        sortOrder = getSortOrderFromName(classFullName);
     }
 
     public MenuInfo(JMeterGUIComponent item, String displayDrawer, String classFullName) {
@@ -45,9 +47,22 @@ public class MenuInfo {
         drawer = displayDrawer;
         className = classFullName;
         guiComp = item;
+        sortOrder = getSortOrderFromName(classFullName);
     }
 
-    public String getLabel(){
+    private int getSortOrderFromName(String classFullName) {
+        try {
+            GUIMenuSortOrder menuSortOrder = Class.forName(classFullName)
+                    .getDeclaredAnnotation(GUIMenuSortOrder.class);
+            if (menuSortOrder != null) {
+                return menuSortOrder.value();
+            }
+        } catch (ClassNotFoundException ignored) {
+        }
+        return SORT_ORDER_DEFAULT;
+    }
+
+    public String getLabel() {
         if (guiComp != null) {
             return guiComp.getStaticLabel();
         }
@@ -60,5 +75,9 @@ public class MenuInfo {
 
     public String getClassName(){
         return className;
+    }
+
+    public int getSortOrder() {
+        return sortOrder;
     }
 }
