@@ -20,6 +20,7 @@ package org.apache.jmeter.gui.util;
 
 import org.apache.jmeter.gui.GUIMenuSortOrder;
 import org.apache.jmeter.gui.JMeterGUIComponent;
+import org.apache.jmeter.gui.action.ActionNames;
 
 /**
  * Class to hold additional information needed when building the GUI lists
@@ -35,18 +36,18 @@ public class MenuInfo {
     private final int sortOrder;
 
     public MenuInfo(String displayLabel, String displayDrawer, String classFullName) {
-        label = displayLabel;
-        drawer = displayDrawer;
-        className = classFullName;
-        guiComp = null;
-        sortOrder = getSortOrderFromName(classFullName);
+        this(displayLabel, null, displayDrawer, classFullName);
     }
 
     public MenuInfo(JMeterGUIComponent item, String displayDrawer, String classFullName) {
-        label = item.getStaticLabel();
+        this(item.getStaticLabel(), item, displayDrawer, classFullName);
+    }
+    
+    public MenuInfo(String label, JMeterGUIComponent item, String displayDrawer, String classFullName) {
+        this.label = label;
         drawer = displayDrawer;
-        className = classFullName;
         guiComp = item;
+        className = classFullName;
         sortOrder = getSortOrderFromName(classFullName);
     }
 
@@ -58,6 +59,7 @@ public class MenuInfo {
                 return menuSortOrder.value();
             }
         } catch (ClassNotFoundException ignored) {
+            // NOOP
         }
         return SORT_ORDER_DEFAULT;
     }
@@ -79,5 +81,19 @@ public class MenuInfo {
 
     public int getSortOrder() {
         return sortOrder;
+    }
+
+    /**
+     * Returns whether the menu item represented by this MenuInfo object should be enabled
+     * @param actionCommand    the action command name for the menu item
+     * @return true when menu item should be enabled, false otherwise.
+     */
+    public boolean getEnabled(String actionCommand) {
+        if (ActionNames.ADD.equals(actionCommand)) {
+            return guiComp.canBeAdded();
+        }
+        else {
+            return true;
+        }
     }
 }

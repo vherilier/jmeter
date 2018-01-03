@@ -160,10 +160,10 @@ public final class MenuFactory {
                         subMenus.add(new MenuInfo(item, subCategory, name));
                     }
                 }
-                for (String key: menus.keySet()) {
-                    if (categories.contains(key)) {
+                for (Map.Entry<String, List<MenuInfo>> entry: menus.entrySet()) {
+                    if (categories.contains(entry.getKey())) {
                         for (MenuInfo subMenu: subMenus) {
-                            menus.get(key).add(submenu);
+                            entry.getValue().add(new MenuInfo(subMenu));
                         }
                     }
                 }
@@ -329,7 +329,13 @@ public final class MenuFactory {
 
     public static JPopupMenu getDefaultControllerMenu() {
         JPopupMenu pop = new JPopupMenu();
-        pop.add(createDefaultAddMenu());
+        String addAction = ActionNames.ADD;
+        JMenu addMenu = new JMenu(JMeterUtils.getResString("add")); // $NON-NLS-1$
+        addMenu.add(MenuFactory.makeMenu(MenuFactory.SAMPLERS, addAction));
+        addMenu.addSeparator();
+        addMenu.add(MenuFactory.makeMenu(MenuFactory.CONTROLLERS, addAction));
+        addMenu.addSeparator();
+        pop.add(addDefaultAddMenuToMenu(addMenu, addAction));
         pop.add(MenuFactory.makeMenuItemRes("add_think_times",// $NON-NLS-1$
                 ActionNames.ADD_THINK_TIME_BETWEEN_EACH_STEP));
 
@@ -351,6 +357,11 @@ public final class MenuFactory {
     private static JMenu createDefaultAddMenu() {
         String addAction = ActionNames.ADD;
         JMenu addMenu = new JMenu(JMeterUtils.getResString("add")); // $NON-NLS-1$
+        addDefaultAddMenuToMenu(addMenu, addAction);
+        return addMenu;
+    }
+    
+    private static JMenu addDefaultAddMenuToMenu(JMenu addMenu, String addAction) {
         addMenu.add(MenuFactory.makeMenu(MenuFactory.ASSERTIONS, addAction));
         addMenu.addSeparator();
         addMenu.add(MenuFactory.makeMenu(MenuFactory.TIMERS, addAction));
@@ -534,6 +545,7 @@ public final class MenuFactory {
 
         JMenuItem newMenuChoice = new JMenuItem(info.getLabel());
         newMenuChoice.setName(info.getClassName());
+        newMenuChoice.setEnabled(info.getEnabled(actionCommand));
         newMenuChoice.addActionListener(ActionRouter.getInstance());
         if (actionCommand != null) {
             newMenuChoice.setActionCommand(actionCommand);
@@ -544,12 +556,6 @@ public final class MenuFactory {
 
     private static JMenuItem makeMenuItemRes(String resource, String actionCommand, KeyStroke accel) {
         JMenuItem item = makeMenuItemRes(resource, actionCommand);
-        item.setAccelerator(accel);
-        return item;
-    }
-
-    private static JMenuItem makeMenuItem(String label, String name, String actionCommand, KeyStroke accel) {
-        JMenuItem item = makeMenuItem(label, name, actionCommand);
         item.setAccelerator(accel);
         return item;
     }

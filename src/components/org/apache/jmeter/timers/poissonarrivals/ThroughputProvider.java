@@ -15,25 +15,14 @@
  * limitations under the License.
  *
  */
-package org.apache.jmeter.report.core;
 
-import java.util.regex.Pattern;
+package org.apache.jmeter.timers.poissonarrivals;
 
 /**
- * Simple parser to get a {@link SampleMetadata} instance<br>
- * 
- * @since 3.0
+ * @since 4.0
+ *
  */
-public class SampleMetaDataParser {
-
-    private char separator;
-
-    public SampleMetaDataParser(char separator) {
-        this.separator = separator;
-    }
-
-    public SampleMetadata parse(String headRow) {
-        String[] cols = headRow.split(Pattern.quote(Character.toString(separator)));
-        return new SampleMetadata(separator, cols);
-    }
+@FunctionalInterface
+interface ThroughputProvider {
+    double getThroughput();
 }

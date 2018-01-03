@@ -222,12 +222,14 @@ public interface JMeterGUIComponent extends ClearGui {
     Collection<String> getMenuCategories();
 
     /**
-     * This is the list of add sub menu categories this gui component will be
-     * available under. For instance, if this represents a Controller, then the
-     * MenuFactory.CONTROLLERS sub category should be in the returned collection.
-     * When a user right-clicks on a tree element and looks through the "add"
-     * menu, which sub category your GUI component shows up in is determined by
-     * which sub categories are returned by this method. Most GUI's belong to only
+     * Returns whether a component of this type can be added to the test plan.
+     * @return true if the component can be added, false otherwise.
+     */
+    default boolean canBeAdded() {
+        return true;
+    }
+    
+    /**
      * one sub category, but it is possible for a component to exist in multiple
      * sub categories.
      *
