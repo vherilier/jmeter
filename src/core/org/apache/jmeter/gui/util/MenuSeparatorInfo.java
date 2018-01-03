@@ -23,6 +23,6 @@ package org.apache.jmeter.gui.util;
  */
 public class MenuSeparatorInfo extends MenuInfo {
     public MenuSeparatorInfo() {
-        super("separator", "javax.swing.JPopupMenu.Separator");
+        super("separator", "", "javax.swing.JPopupMenu.Separator");
     }
 }

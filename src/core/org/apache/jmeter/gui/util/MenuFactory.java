@@ -152,18 +152,18 @@ public final class MenuFactory {
                 Collection<MenuInfo> subMenus = new ArrayList<MenuInfo>();
                 Collection<String> subCategories = item.getSubMenuCategories();
                 if (subCategories == null) {
-                    log.debug(name + " participates in no sub menus.");
-                    subMenus.add(new MenuInfo(item, "", name));
+                    log.debug(className + " participates in no sub menus.");
+                    subMenus.add(new MenuInfo(item, "", className));
                 } else {
                     for (String subCategory: subCategories) {
-                        log.debug(name + " participates in '" + subCategory + "' sub menu.");
-                        subMenus.add(new MenuInfo(item, subCategory, name));
+                        log.debug(className + " participates in '" + subCategory + "' sub menu.");
+                        subMenus.add(new MenuInfo(item, subCategory, className));
                     }
                 }
                 for (Map.Entry<String, List<MenuInfo>> entry: menus.entrySet()) {
                     if (categories.contains(entry.getKey())) {
                         for (MenuInfo subMenu: subMenus) {
-                            entry.getValue().add(new MenuInfo(subMenu));
+                            entry.getValue().add(subMenu);
                         }
                     }
                 }
@@ -206,7 +206,8 @@ public final class MenuFactory {
 
     private static void sortMenus(Collection<List<MenuInfo>> menus) {
         for (List<MenuInfo> menu : menus) {
-            menu.sort(Comparator.comparing(MenuInfo::getDrawer + MenuInfo::getLabel));
+            menu.sort(Comparator.comparing(MenuInfo::getDrawer));
+            menu.sort(Comparator.comparing(MenuInfo::getLabel));
             menu.sort(Comparator.comparingInt(MenuInfo::getSortOrder));
         }
     }
