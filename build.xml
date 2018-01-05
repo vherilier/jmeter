@@ -3023,6 +3023,9 @@ run JMeter unless all the JMeter jars are added.
       <path refid="logging.classpath"/>
     </classpath>
     <batchtest todir="reports" skipNonTests="true">
+        <fileset dir="${build.test}">
+            <include name="**/*Spec.class" />
+		</fileset>
         <fileset dir="${src.test}">
             <include name="**/*Test*.java" />
             <exclude name="**/AllTests.java" />
@@ -3657,7 +3660,7 @@ run JMeter unless all the JMeter jars are added.
 
   <target name="sonar" depends="compile, install, coverage, _sonar" />
 
-  <target name="nightlysonar" depends="_coverage.prepare, nightly, init-svnVersion, _coverage.report, _sonar" />
+  <target name="nightlysonar" depends="_coverage.prepare, nightly, init-svnVersion, _coverage.report, _sonar, complete-junit" />
 
   <target name="setproxy" if="${proxy.use}">
     <setproxy proxyhost="${proxy.host}" proxyport="${proxy.port}"
