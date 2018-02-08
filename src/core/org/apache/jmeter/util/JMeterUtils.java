@@ -156,7 +156,7 @@ public class JMeterUtils implements UnitTestManager {
 
     /**
      * Initialise JMeter logging
-     * @deprecated
+     * @deprecated does not do anything anymore
      */
     @Deprecated
     public static void initLogging() {
@@ -175,7 +175,6 @@ public class JMeterUtils implements UnitTestManager {
             } else {
                 setLocale(new Locale(loc, "")); // $NON-NLS-1$
             }
-
         } else {
             setLocale(Locale.getDefault());
         }
