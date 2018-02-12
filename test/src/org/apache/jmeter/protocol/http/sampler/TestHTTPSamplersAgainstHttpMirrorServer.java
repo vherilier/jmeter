@@ -281,7 +281,9 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
                 res = executeSampler(sampler);
                 String expectedTitleValue = "a test\u00c5mytitle7\u0153\u20a1\u0115\u00c5";
                 String expectedDescriptionValue = "mydescription7\u0153\u20a1\u0115\u00c5the_end";
-                checkPostRequestUrlEncoded(sampler, res, samplerDefaultEncoding, contentEncoding, titleField, expectedTitleValue, descriptionField, expectedDescriptionValue, false);
+                checkPostRequestUrlEncoded(sampler, res, samplerDefaultEncoding,
+                        contentEncoding, titleField, expectedTitleValue,
+                        descriptionField, expectedDescriptionValue, false);
                 break;
             case 8:
                 break;
@@ -292,13 +294,6 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
             default:
                 fail("Unexpected switch value: "+test);
         }
-        
-
-
-
-
-        
-
     }
 
     private void testPostRequest_FormMultipart(int samplerType, String samplerDefaultEncoding) throws Exception {
@@ -413,7 +408,10 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
         setupUrl(sampler, contentEncoding);
         setupFileUploadData(sampler, false, titleField, titleValue, descriptionField, descriptionValue, fileField, temporaryFile, fileMimeType);
         HTTPSampleResult res = executeSampler(sampler);
-        checkPostRequestFileUpload(sampler, res, samplerDefaultEncoding, contentEncoding, titleField, titleValue, descriptionField, descriptionValue, fileField, temporaryFile, fileMimeType, TEST_FILE_CONTENT);
+        checkPostRequestFileUpload(sampler, res, samplerDefaultEncoding,
+                contentEncoding, titleField, titleValue, descriptionField,
+                descriptionValue, fileField, temporaryFile, fileMimeType,
+                TEST_FILE_CONTENT);
         
         // Test sending data as ISO-8859-1
         sampler = createHttpSampler(samplerType);
@@ -421,7 +419,10 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
         setupUrl(sampler, contentEncoding);
         setupFileUploadData(sampler, false, titleField, titleValue, descriptionField, descriptionValue, fileField, temporaryFile, fileMimeType);
         res = executeSampler(sampler);
-        checkPostRequestFileUpload(sampler, res, samplerDefaultEncoding, contentEncoding, titleField, titleValue, descriptionField, descriptionValue, fileField, temporaryFile, fileMimeType, TEST_FILE_CONTENT);
+        checkPostRequestFileUpload(sampler, res, samplerDefaultEncoding,
+                contentEncoding, titleField, titleValue, descriptionField,
+                descriptionValue, fileField, temporaryFile, fileMimeType,
+                TEST_FILE_CONTENT);
 
         // Test sending data as UTF-8
         sampler = createHttpSampler(samplerType);
@@ -431,7 +432,10 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
         setupUrl(sampler, contentEncoding);
         setupFileUploadData(sampler, false, titleField, titleValue, descriptionField, descriptionValue, fileField, temporaryFile, fileMimeType);
         res = executeSampler(sampler);
-        checkPostRequestFileUpload(sampler, res, samplerDefaultEncoding, contentEncoding, titleField, titleValue, descriptionField, descriptionValue, fileField, temporaryFile, fileMimeType, TEST_FILE_CONTENT);
+        checkPostRequestFileUpload(sampler, res, samplerDefaultEncoding,
+                contentEncoding, titleField, titleValue, descriptionField,
+                descriptionValue, fileField, temporaryFile, fileMimeType,
+                TEST_FILE_CONTENT);
     }
 
     private void testPostRequest_BodyFromParameterValues(int samplerType, String samplerDefaultEncoding) throws Exception {
@@ -847,7 +851,10 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
         assertEquals(sampler.getUrl(), res.getURL());
         String boundaryString = getBoundaryStringFromContentType(res.getRequestHeaders());
         assertNotNull(boundaryString);
-        byte[] expectedPostBody = createExpectedFormAndUploadOutput(boundaryString, contentEncoding, titleField, titleValue, descriptionField, descriptionValue, fileField, fileValue, fileMimeType, fileContent);
+        byte[] expectedPostBody = createExpectedFormAndUploadOutput(
+                boundaryString, contentEncoding, titleField, titleValue,
+                descriptionField, descriptionValue, fileField, fileValue,
+                fileMimeType, fileContent);
         // Check request headers
         checkHeaderTypeLength(res.getRequestHeaders(), "multipart/form-data" + "; boundary=" + boundaryString, expectedPostBody.length);
         // We cannot check post body from the result query string, since that will not contain
@@ -1008,7 +1015,7 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
         int indexQueryStart = uriSent.indexOf('?');
         if(expectedQueryString != null && expectedQueryString.length() > 0) {
             // We should have a query string part
-            if(indexQueryStart <= 0 || (indexQueryStart == uriSent.length() - 1)) {
+            if(indexQueryStart <= 0 || indexQueryStart == uriSent.length() - 1) {
                 fail("Could not find query string in URI");
             }
         }
@@ -1030,7 +1037,12 @@ public class TestHTTPSamplersAgainstHttpMirrorServer extends JMeterTestCaseJUnit
             // Is it only the parameter values which are encoded in the specified
             // content encoding, the rest of the query is encoded in UTF-8
             // Therefore we compare the whole query using UTF-8
-            checkArraysHaveSameContent(expectedQueryString.getBytes(EncoderCache.URL_ARGUMENT_ENCODING), queryStringSent.getBytes(EncoderCache.URL_ARGUMENT_ENCODING), EncoderCache.URL_ARGUMENT_ENCODING, res);
+            checkArraysHaveSameContent(
+                    expectedQueryString
+                            .getBytes(EncoderCache.URL_ARGUMENT_ENCODING),
+                    queryStringSent
+                            .getBytes(EncoderCache.URL_ARGUMENT_ENCODING),
+                    EncoderCache.URL_ARGUMENT_ENCODING, res);
         }
     }
 

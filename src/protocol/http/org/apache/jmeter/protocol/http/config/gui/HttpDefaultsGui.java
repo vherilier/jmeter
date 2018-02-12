@@ -111,7 +111,7 @@ public class HttpDefaultsGui extends AbstractConfigGui {
      */
     @Override
     public void modifyTestElement(TestElement config) {
-        ConfigTestElement cfg = (ConfigTestElement ) config;
+        ConfigTestElement cfg = (ConfigTestElement) config;
         ConfigTestElement el = (ConfigTestElement) urlConfigGui.createTestElement();
         cfg.clear(); 
         cfg.addConfigElement(el);
