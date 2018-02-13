@@ -118,7 +118,7 @@ Summary
 
 <ch_section>Non-functional changes</ch_section>
 <ul>
-    <li><pr>365</pr><pr>375</pr>Updated to latest checkstyle (v8.8). Expanded Checkstyle to files
+    <li><pr>358</pr><pr>365</pr><pr>366</pr><pr>375</pr>Updated to latest checkstyle (v8.8). Expanded Checkstyle to files
       in <code>src</code> and <code>test</code>; fixed newly checked files. Based on contribution
       by Graham Russell (graham at ham1.co.uk)</li>
     <li><bug>62095</bug>Correct description for right boundary parameter in Boundary Extractor. Contributed by orimarko (orimarko at gmail.com)</li>
@@ -142,6 +142,7 @@ Summary
 
 <h3>Listeners</h3>
 <ul>
+  <li><bug>62097</bug>Update JTable in Aggregate Report only when new data has arrived. That way selections of rows will be kept longer around.</li>
 </ul>
 
 <h3>Timers, Assertions, Config, Pre- &amp; Post-Processors</h3>
