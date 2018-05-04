@@ -13,7 +13,7 @@ Which jars are used by which modules?
 ====================================
 [not exhaustive]
 
-asm-6.0 (org.ow2.asm)
+asm-6.1 (org.ow2.asm)
 ----------------------
 - JSON Path extractor
 
@@ -114,6 +114,15 @@ https://github.com/hamcrest/JavaHamcrest
 freemarker-2.3.23.jar
 ----------------------
 - used by Report/Dashboard feature
+
+javax.activation-api-1.2.0.jar
+----------------------
+- used by SMTP Sampler
+
+javax.activation-1.2.0.jar
+----------------------
+- used by SMTP Sampler
+
 
 jCharts-0.7.5 (org.jCharts)
 -------------
@@ -231,7 +240,7 @@ http://www.slf4j.org/
 - jodd-core
 - json-path
 
-tika-1.17
+tika-1.18
 --------------
 http://tika.apache.org/
 - Regular Expression Extractor

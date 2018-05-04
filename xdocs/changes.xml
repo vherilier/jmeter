@@ -75,6 +75,8 @@ Summary
 
 <ch_section>Incompatible changes</ch_section>
 <ul>
+<li>Since JMeter 4.1, when using default HC4 Implementation, JMeter will reset HTTP state (SSL State + Connections) on each thread group iteration. If you don't want
+this behaviour, set <code>httpclient.reset_state_on_thread_group_iteration=false</code></li>
 </ul>
 <!-- =================== Improvements =================== -->
 
@@ -82,27 +84,43 @@ Summary
 
 <h3>HTTP Samplers and Test Script Recorder</h3>
 <ul>
+    <li><bug>62260</bug>Improve Rest support. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>58757</bug>HTTP Request : Updated deprecated methods of HttpComponents to last APIs of httpclient-4.5.X. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>62212</bug>Recorder : Improve UX by providing a popup above all windows to be able to change Transaction names and pauses while using Browser. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>62248</bug>HTTP Request : Parameters entered in Parameters Tab should be used in body instead of being ignored. Partly based on a patch by Artem Fedorov contributed by Blazemeter.</li>
+    <li><bug>60015</bug>Multipart/form-data works only for POST using HTTPClient4 while it should for PUT, DELETE... Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>62317</bug>HTTP(S) Test Script Recorder: allow to add ResultSaver to created sampler</li>
 </ul>
 
 <h3>Other samplers</h3>
 <ul>
   <li><pr>376</pr>JUnitSampler logs exceptions except assertion-failures from test cases as warnings. Contributed by Davide Angelocola (davide.angelocola at fisglobal.com)</li>
+  <li><bug>62244</bug>Rename <code>Test Action</code> to <code>Flow Control Action</code></li>
+  <li><bug>62302</bug>Move JSR223 Sampler up the menu. Contributed by orimarko at gmail.com</li>
 </ul>
 
 <h3>Controllers</h3>
 <ul>
+    <li><bug>62237</bug>While Controller : Export variable containing current index of iteration. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
 </ul>
 
 <h3>Listeners</h3>
 <ul>
+    <li><bug>62195</bug>Save Responses to a file : Improve component and UI. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>62209</bug>InfluxBackendListenerClient: First Assertion Failure Message must be sent if error code and response code are empty or ok</li>
+    <li><bug>62269</bug>Bug 62269 - View Results Tree : Response and Request Tabs should contains Header and Body tabs. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>62270</bug>View Results Tree : Allow searching in Request headers, Response Headers, and Request body. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>62276</bug>InfluxDBBackendListenerClient / GraphiteBackendListenerClient : Add sent and received bytes to metrics. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
 </ul>
 
 <h3>Timers, Assertions, Config, Pre- &amp; Post-Processors</h3>
 <ul>
+    <li><bug>62320</bug>Counter : Reference Name property is not clear</li>
 </ul>
 
 <h3>Functions</h3>
 <ul>
+    <li><bug>62178</bug>Add default value to <code>__V</code> function. Contributed by orimarko at gmail.com</li>
 </ul>
 
 <h3>I18N</h3>
@@ -111,10 +129,20 @@ Summary
 
 <h3>Report / Dashboard</h3>
 <ul>
+    <li><bug>62243</bug>Dashboard : make option "<code>--forceDeleteResultFile</code>"/"<code>-f</code>" option delete folder referenced by "<code>-o</code>" option</li>
 </ul>
 
 <h3>General</h3>
 <ul>
+  <li><bug>62128</bug>Try to guess <code>JMETER_HOME</code> correctly, when <code>jmeter.bat</code> is called from a batch file in another directory. Contributed by logox01 (logox01 at gmx.at)</li>
+  <li><bug>62155</bug>Search Feature: Make Search text field get focus</li>
+  <li><bug>62156</bug>Search Feature : Distinguish between node that matches search and node that contains a child that matches search</li>
+  <li><bug>62234</bug>Search/Replace Feature : Enhance UX and add Replace/Next/Previous/Replace &amp; Find features. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+  <li><bug>62238</bug>Add ability to Switch to next iteration of Current Loop. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+  <li><bug>62239</bug>Add ability to Break Current Loop</li>
+  <li><bug>62065</bug>Use Maven artifact for JAF Module instead of embedded module</li>
+  <li><pr>379</pr> Improve chinese translations. Contributed by XmeterNet</li>
+  <li><bug>61714</bug>Update Real-time results documentation</li>
 </ul>
 
 <ch_section>Non-functional changes</ch_section>
@@ -123,6 +151,11 @@ Summary
       in <code>src</code> and <code>test</code>; fixed newly checked files. Based on contribution
       by Graham Russell (graham at ham1.co.uk)</li>
     <li><bug>62095</bug>Correct description for right boundary parameter in Boundary Extractor. Contributed by orimarko (orimarko at gmail.com)</li>
+    <li><bug>62113</bug>Updated to latest Bouncycastle (v1.59). Based on contribution by Olaf Flebbe (oflebbe at apache.org)</li>
+    <li><bug>62171</bug>Remove .md5 checksums and keep only .sha512 checksums for source and binary archives</li>
+    <li>Updated to groovy-all-2.4.14 (from groovy-all-2.4.13)</li>
+    <li>Updated to asm-6.1 (from 6.1)</li>
+    <li>Updated to tika-core and tika-parsers 1.18 (from 1.17)</li>
 </ul>
 
  <!-- =================== Bug fixes =================== -->
@@ -131,23 +164,34 @@ Summary
 
 <h3>HTTP Samplers and Test Script Recorder</h3>
 <ul>
+    <li><bug>62114</bug>HTTP(S) Test Script Recorder : Client certificate authentication uses the first SSLManager created. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>61058</bug>HTTP Request : Add option <code>httpclient4.deflate_relax_mode</code> to avoid "Unexpected end of ZLIB input stream" when deflating what seems to be invalid streams. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>43612</bug>HTTP PUT does not honor request parameters. Implemented by Artem Fedorov (artem.fedorov at blazemeter.com) and contributed by BlazeMeter Ltd.</li>
+    <li><bug>60190</bug>Content-Type is added for POST unconditionally. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
 </ul>
 
 <h3>Other Samplers</h3>
 <ul>
+    <li><bug>58807</bug><code>https.use.cached.ssl.context=false</code> is broken</li>
+    <li><bug>62235</bug>Java 9 - illegal reflective access by org.apache.jmeter.util.HostNameSetter</li>
 </ul>
 
 <h3>Controllers</h3>
 <ul>
+    <li><bug>62265</bug>ModuleController behaves strangely</li>
 </ul>
 
 <h3>Listeners</h3>
 <ul>
   <li><bug>62097</bug>Update JTable in Aggregate Report only when new data has arrived. That way selections of rows will be kept longer around.</li>
+  <li><bug>62203</bug>Influxdb BackendListener client: store user tags to annotation and internal transaction. Contributed by Sergey Batalin (sergey_batalin at mail.ru)</li>
+  <li><bug>62251</bug>TextGraphiteMetricsSender does not invalidate lost connections in case of network errors </li>
 </ul>
 
 <h3>Timers, Assertions, Config, Pre- &amp; Post-Processors</h3>
 <ul>
+    <li><bug>61664</bug>HTTP Authorization Manager : Digest works only with legacy RFC 2069 , RFC 2617 is not implemented. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+    <li><bug>62252</bug>HTTP header merging logic does not correspond to the documentation</li>
 </ul>
 
 <h3>Functions</h3>
@@ -156,15 +200,28 @@ Summary
 
 <h3>I18N</h3>
 <ul>
+    <li><bug>62310</bug>French translation of Precise Throughput Timer label</li>
 </ul>
 
 <h3>Report / Dashboard</h3>
 <ul>
 </ul>
 
+<h3>Documentation</h3>
+<ul>
+    <li><bug>62211</bug>Fix HTTP Request Server Documentation. Contributed by orimarko at gmail.com</li>
+</ul>
+
 <h3>General</h3>
 <ul>
   <li><bug>62107</bug>JMeter fails to start under Windows when <code>JM_LAUNCH</code> contains spaces</li>
+  <li><bug>62110</bug>A broken junit class (due to missing dependency) breaks JMeter menus. Contributed by Ubik Load Pack (support at ubikloadpack.com)</li>
+  <li><pr>377</pr>Small fix of the docs. Contributed by Peter Doornbosch (peter.doornbosch at luminis.eu)</li>
+  <li><bug>62124</bug>Recording templates : Add more exclusions and use Transaction Name by default</li>
+  <li><bug>62127</bug>Store filename as String instead of File in FileEditor. This will prevent conversion of filenames from unix style path separators to Windows style when used for example in CSV Data Set Config.</li>
+  <li><bug>56150</bug>Keep the index right, when scrolling through the menu items.</li>
+  <li><bug>62240</bug>If SampleMonitor implementation is a TestBean if will not be initialized correctly</li>
+  <li><bug>62295</bug>Correct order of elements when duplicating a selection of multiple elements.</li>
 </ul>
 
  <!--  =================== Thanks =================== -->
@@ -176,6 +233,13 @@ Summary
     <li>Graham Russell (graham at ham1.co.uk)</li>
     <li>orimarko at gmail.com</li>
     <li>Davide Angelocola (davide.angelocola at fisglobal.com)</li>
+    <li><a href="https://ubikloadpack.com">Ubik Load Pack</a></li>
+    <li>Olaf Flebbe (oflebbe at apache.org)</li>
+    <li>Peter Doornbosch (peter.doornbosch at luminis.eu)</li>
+    <li>logox01 (logox01 at gmx.at)</li>
+    <li>Sergey Batalin (sergey_batalin at mail.ru)</li>
+    <li><a href="https://www.xmeter.net">XMeter</a></li>
+    <li>Imane Ankhila (iankhila at ahlane.net)</li>
 </ul>
 <p>We also thank bug reporters who helped us improve JMeter.</p>
 <p>

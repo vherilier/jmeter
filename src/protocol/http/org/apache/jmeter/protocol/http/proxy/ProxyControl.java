@@ -68,6 +68,7 @@ import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.processor.PreProcessor;
 import org.apache.jmeter.protocol.http.control.AuthManager;
+import org.apache.jmeter.protocol.http.control.AuthManager.Mechanism;
 import org.apache.jmeter.protocol.http.control.Authorization;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -307,7 +308,7 @@ public class ProxyControl extends GenericController implements NonTestElement {
     private Set<Class<?>> addableInterfaces = new HashSet<>(
             Arrays.asList(Visualizer.class, ConfigElement.class,
                     Assertion.class, Timer.class, PreProcessor.class,
-                    PostProcessor.class));
+                    PostProcessor.class, SampleListener.class));
 
     /**
      * Tree node where the samples should be stored.
@@ -712,10 +713,19 @@ public class ProxyControl extends GenericController implements NonTestElement {
                             }
                             // if HEADER_AUTHORIZATION contains "Basic"
                             // then set Mechanism.BASIC_DIGEST, otherwise Mechanism.KERBEROS
-                            authorization.setMechanism(
-                                    authType.equals(BASIC_AUTH)||authType.equals(DIGEST_AUTH)?
-                                    AuthManager.Mechanism.BASIC_DIGEST:
-                                    AuthManager.Mechanism.KERBEROS);
+                            Mechanism mechanism;
+                            switch (authType) {
+                            case DIGEST_AUTH:
+                                mechanism = Mechanism.DIGEST;
+                                break;
+                            case BASIC_AUTH:
+                                mechanism = Mechanism.BASIC;
+                                break;
+                            default:
+                                mechanism = Mechanism.KERBEROS;
+                                break;
+                            } 
+                            authorization.setMechanism(mechanism);
                             if(BASIC_AUTH.equals(authType)) {
                                 String authCred= new String(Base64.decodeBase64(authCredentialsBase64));
                                 String[] loginPassword = authCred.split(":"); //$NON-NLS-1$
